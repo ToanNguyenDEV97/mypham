@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { MapPin, User, LogOut, Package, ShieldCheck, Clock, CheckCircle2, Truck, XCircle, Search } from 'lucide-react';
+import { Order, CartItem} from '../../types';
 import { SEO } from '../ui/SEO';
 import { formatPrice } from '../../utils/format';
 
 export const ProfileView = ({ onLogout, onAdminClick }: { onLogout: () => void; onAdminClick?: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders'>('profile');
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
@@ -238,7 +239,7 @@ export const ProfileView = ({ onLogout, onAdminClick }: { onLogout: () => void; 
                         </div>
                         
                         <div className="space-y-3 mb-4">
-                          {order.items?.map((item: any, idx: number) => (
+                          {order.items?.map((item: CartItem, idx: number) => (
                             <div key={idx} className="flex gap-4 items-center">
                               <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden shrink-0">
                                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />

@@ -1,7 +1,8 @@
+import { Product } from '../../types';
 import React from 'react';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 
-export const ProductCard: React.FC<{ product: any; onClick?: () => void; onAddToCart?: (product: any) => void; isWishlisted?: boolean; onToggleWishlist?: (product: any) => void }> = ({ product, onClick, onAddToCart, isWishlisted, onToggleWishlist }) => (
+export const ProductCard: React.FC<{ product: Product; onClick?: () => void; onAddToCart?: (product: Product) => void; isWishlisted?: boolean; onToggleWishlist?: (product: Product) => void }> = ({ product, onClick, onAddToCart, isWishlisted, onToggleWishlist }) => (
   <div className="group flex flex-col bg-white">
     <div className="aspect-[4/5] relative bg-[#FCE8ED] overflow-hidden rounded-2xl mb-3">
       <div 

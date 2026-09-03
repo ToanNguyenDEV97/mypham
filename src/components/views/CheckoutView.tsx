@@ -4,21 +4,23 @@ import { parsePrice, formatPrice } from '../../utils/format';
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { CartItem, Voucher, Order, Settings } from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: any[]; onBack: () => void; onComplete: () => void; onClearCart?: () => void }) => {
+export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }: { cart: CartItem[]; onBack: () => void; onComplete: () => void; onClearCart?: () => void; settings?: Settings }) => {
   const totalPrice = cart.reduce((total, item) => total + parsePrice(item.newPrice || item.price) * item.quantity, 0);
   const shippingFee = totalPrice > 500000 ? 0 : 30000;
   
-  const [profile, setProfile] = useState({ name: '', phone: '', address: '', note: '' });
+  const [profile, setProfile] = useState({ name: '', phone: '', email: '', address: '', note: '' });
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
   
   const [voucherCode, setVoucherCode] = useState('');
-  const [appliedVoucher, setAppliedVoucher] = useState<any>(null);
+  const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
   const [voucherError, setVoucherError] = useState('');
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   // Calculate discount
   let discountAmount = 0;
@@ -45,11 +47,12 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
             setProfile({ 
               name: data.name || auth.currentUser.displayName || '', 
               phone: data.phone || '', 
+              email: auth.currentUser.email || '',
               address: data.address ? (data.address + (data.city ? ', ' + data.city : '')) : '',
               note: ''
             });
           } else {
-            setProfile(prev => ({ ...prev, name: auth.currentUser?.displayName || '' }));
+            setProfile(prev => ({ ...prev, name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' }));
           }
         } catch (error) {
           console.error(error);
@@ -88,7 +91,7 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
       }
       
       const docData = querySnapshot.docs[0];
-      const voucher = { id: docData.id, ...docData.data() } as any;
+      const voucher = { id: docData.id, ...docData.data() } as Voucher;
       
       if (!voucher.isActive) {
         setVoucherError('Mã giảm giá không hoạt động');
@@ -126,9 +129,10 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCheckoutError('');
     setIsSubmitting(true);
     try {
-      const orderData: any = {
+      const orderData: Partial<Order> = {
         userId: auth.currentUser?.uid || 'guest',
         customerInfo: profile,
         items: cart,
@@ -150,13 +154,22 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
         });
       }
 
-      const newOrderId = generateOrderId();
-      await setDoc(doc(db, 'orders', newOrderId), orderData);
+      let newOrderId = generateOrderId();
+      let orderRef = doc(db, 'orders', newOrderId);
+      let orderSnap = await getDoc(orderRef);
+      
+      while (orderSnap.exists()) {
+        newOrderId = generateOrderId();
+        orderRef = doc(db, 'orders', newOrderId);
+        orderSnap = await getDoc(orderRef);
+      }
+
+      await setDoc(orderRef, orderData);
       setSuccessOrderId(newOrderId);
       if (onClearCart) onClearCart();
     } catch (error) {
       console.error('Error saving order:', error);
-      onComplete(); // Still complete if firestore fails for some reason (or show error)
+      setCheckoutError('Đã xảy ra lỗi trong quá trình đặt hàng. Vui lòng thử lại sau.');
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +243,15 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
               
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Email (Tùy chọn)</label>
-                <input type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#F4B5C6] focus:ring-1 focus:ring-[#F4B5C6] outline-none transition-all bg-white" placeholder="email@example.com" />
+                <input 
+                  type="email" 
+                  value={profile.email || ''} 
+                  onChange={e => setProfile({...profile, email: e.target.value})} 
+                  pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+                  title="Vui lòng nhập đúng định dạng email (VD: email@example.com)"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#F4B5C6] focus:ring-1 focus:ring-[#F4B5C6] outline-none transition-all bg-white" 
+                  placeholder="email@example.com" 
+                />
               </div>
 
               <div className="space-y-2">
@@ -269,7 +290,7 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
                     <div className="flex justify-center mb-6">
                       <div className="p-4 bg-white border-2 border-dashed border-[#F4B5C6] rounded-xl">
                         <img 
-                          src={`https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=${finalTotal}&addInfo=DH ${profile.phone || 'ONLINE'}&accountName=NGUYEN VAN A`} 
+                          src={`https://img.vietqr.io/image/${settings?.bankId || 'MB'}-${settings?.bankAccountNumber || '0901234567'}-compact2.png?amount=${finalTotal}&addInfo=DH ${profile.phone || 'ONLINE'}&accountName=${encodeURIComponent(settings?.bankAccountName || 'NGUYEN VAN A')}`} 
                           alt="VietQR" 
                           className="w-48 h-48 object-contain"
                         />
@@ -279,18 +300,18 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
                     <div className="bg-gray-50 rounded-lg p-4 text-left space-y-2 border border-gray-100">
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
                         <span className="text-gray-500">Ngân hàng:</span>
-                        <span className="font-bold text-[#4A2C2C]">MB Bank</span>
+                        <span className="font-bold text-[#4A2C2C]">{settings?.bankId || 'MB Bank'}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 py-2">
                         <span className="text-gray-500">Số tài khoản:</span>
                         <span className="font-bold text-[#4A2C2C] flex items-center gap-2">
-                          0901234567 
-                          <button type="button" onClick={() => navigator.clipboard.writeText('0901234567')} className="text-[#F4B5C6] hover:text-[#4A2C2C] text-xs underline">Copy</button>
+                          {settings?.bankAccountNumber || '0901234567'} 
+                          <button type="button" onClick={() => navigator.clipboard.writeText(settings?.bankAccountNumber || '0901234567')} className="text-[#F4B5C6] hover:text-[#4A2C2C] text-xs underline">Copy</button>
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 py-2">
                         <span className="text-gray-500">Chủ tài khoản:</span>
-                        <span className="font-bold text-[#4A2C2C]">NGUYEN VAN A</span>
+                        <span className="font-bold text-[#4A2C2C]">{settings?.bankAccountName || 'NGUYEN VAN A'}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm pt-2">
                         <span className="text-gray-500">Số tiền:</span>
@@ -307,6 +328,12 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart }: { cart: 
                   </div>
                 )}
               </div>
+
+              {checkoutError && (
+                <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm">
+                  {checkoutError}
+                </div>
+              )}
 
               <button type="submit" disabled={isSubmitting} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
                 <CheckCircle2 className="w-5 h-5" /> 

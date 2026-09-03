@@ -4,15 +4,16 @@ import { reviews as mockReviews, products, bodyCareProducts } from '../../data/m
 import { ProductCard } from '../ui/ProductCard';
 import { auth, db } from '../../lib/firebase';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { Product, Review } from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onToggleWishlist, onProductClick }: any) => {
+export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onToggleWishlist, onProductClick }: { product: Product; onBack: () => void; onAddToCart: (p: Product) => void; wishlist: Product[]; onToggleWishlist: (p: Product) => void; onProductClick: (p: Product) => void; }) => {
   const [activeTab, setActiveTab] = useState<'description' | 'ingredients' | 'reviews'>('description');
-  const [dbReviews, setDbReviews] = useState<any[]>([]);
+  const [dbReviews, setDbReviews] = useState<Review[]>([]);
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const isWishlisted = wishlist.some((w: any) => w.id === product.id);
+  const isWishlisted = wishlist.some((w: Product) => w.id === product.id);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -61,7 +62,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
 
   const displayReviews = dbReviews.length > 0 ? dbReviews : (product.reviews || mockReviews);
   const averageRating = displayReviews.length > 0 
-    ? Math.round(displayReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / displayReviews.length) 
+    ? Math.round(displayReviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / displayReviews.length) 
     : product.rating || 5;
 
   // Get related products (just picking 4 random or from same category)
@@ -213,14 +214,14 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
               </div>
 
               <div className="space-y-6">
-                {displayReviews.map((review: any) => (
+                {displayReviews.map((review: Product) => (
                   <div key={review.id} className="bg-gray-50 p-6 rounded-3xl">
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-[#4A2C2C]">{review.name}</span>
-                        {review.createdAt && (
+                        {(review as any).createdAt && (
                           <span className="text-xs text-gray-400">
-                            {review.createdAt.toDate ? review.createdAt.toDate().toLocaleDateString('vi-VN') : new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                            {(review as any).createdAt.toDate ? (review as any).createdAt.toDate().toLocaleDateString('vi-VN') : new Date((review as any).createdAt).toLocaleDateString('vi-VN')}
                           </span>
                         )}
                       </div>
@@ -230,7 +231,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
                         ))}
                       </div>
                     </div>
-                    <p className="text-gray-600 leading-relaxed">{review.text}</p>
+                    <p className="text-gray-600 leading-relaxed">{(review as any).text}</p>
                   </div>
                 ))}
               </div>
@@ -249,7 +250,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
               product={p} 
               onClick={() => onProductClick(p)} 
               onAddToCart={() => onAddToCart(p)}
-              isWishlisted={wishlist.some((w: any) => w.id === p.id)}
+              isWishlisted={wishlist.some((w: Product) => w.id === p.id)}
               onToggleWishlist={() => onToggleWishlist(p)}
             />
           ))}

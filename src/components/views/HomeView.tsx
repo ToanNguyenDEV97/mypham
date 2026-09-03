@@ -1,3 +1,4 @@
+import { Product, Banner, Post } from '../../types';
 import { ArrowRight, Sparkles, Star, ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, Truck, CreditCard, Headphones, ShieldCheck, Instagram } from 'lucide-react';
 import { ProductCard } from '../ui/ProductCard';
 import { products, bodyCareProducts, reviews, blogPosts, instagramPosts } from '../../data/mockData';
@@ -9,9 +10,9 @@ import { SEO } from '../ui/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishlist, onNavigateToBlog, onPostClick }: any) => {
-  const [homeProducts, setHomeProducts] = useState<any[]>([]);
-  const [banners, setBanners] = useState<any[]>([]);
-  const [recentPosts, setRecentPosts] = useState<any[]>(blogPosts);
+  const [homeProducts, setHomeProducts] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [recentPosts, setRecentPosts] = useState<Post[]>(blogPosts);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [loading, setLoading] = useState(true);
 

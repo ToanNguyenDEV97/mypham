@@ -1,7 +1,8 @@
+import { CartItem } from '../../types';
 import { ShoppingCart, X, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
 import { parsePrice, formatPrice } from '../../utils/format';
 
-export const CartDrawer = ({ isOpen, onClose, cart, updateQuantity, removeFromCart, onCheckout }: { isOpen: boolean; onClose: () => void; cart: any[]; updateQuantity: (id: number, delta: number) => void; removeFromCart: (id: number) => void; onCheckout: () => void }) => {
+export const CartDrawer = ({ isOpen, onClose, cart, updateQuantity, removeFromCart, onCheckout }: { isOpen: boolean; onClose: () => void; cart: CartItem[]; updateQuantity: (id: string | number, delta: number) => void; removeFromCart: (id: string | number) => void; onCheckout: () => void }) => {
   const totalPrice = cart.reduce((total, item) => total + parsePrice(item.newPrice || item.price) * item.quantity, 0);
 
   return (

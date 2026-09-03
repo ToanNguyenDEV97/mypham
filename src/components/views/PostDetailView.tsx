@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react';
+import { Post} from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const PostDetailView = ({ post, onBack }: { post: any, onBack: () => void }) => {
+export const PostDetailView = ({ post, onBack }: { post: Post, onBack: () => void }) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [post]);

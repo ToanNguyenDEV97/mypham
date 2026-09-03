@@ -1,5 +1,6 @@
+import { Settings } from '../../types';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, ShoppingCart, FileText, Settings, Image, Loader2, Tag, Star } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, ShoppingCart, FileText, Settings as SettingsIcon, Image, Loader2, Tag, Star } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { formatPrice } from '../../utils/format';
@@ -57,7 +58,7 @@ export const AdminDashboard = () => {
     { id: 'vouchers', name: 'Mã giảm giá', icon: Tag },
     { id: 'posts', name: 'Bài viết', icon: FileText },
     { id: 'reviews', name: 'Đánh giá', icon: Star },
-    { id: 'settings', name: 'Cấu hình', icon: Settings },
+    { id: 'settings', name: 'Cấu hình', icon: SettingsIcon },
   ];
 
   return (

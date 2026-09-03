@@ -17,6 +17,12 @@ export const AdminSettings = () => {
     email: 'contact@dstien.vn',
     facebook: '#',
     instagram: '#',
+    zalo: 'https://zalo.me',
+    messenger: 'https://m.me',
+    tiktok: '#',
+    bankAccountName: 'NGUYEN VAN A',
+    bankAccountNumber: '0901234567',
+    bankId: 'MB',
     topBarText: 'Miễn phí giao hàng đơn từ 500k',
     categories: ['Tất cả', 'Làm sạch', 'Chăm sóc da', 'Trang điểm', 'Chăm sóc cơ thể'],
     brands: ['DS Tiên', 'Rohto', 'Romand', 'Luminous']
@@ -169,6 +175,59 @@ export const AdminSettings = () => {
                 type="text" 
                 value={settings.instagram}
                 onChange={(e) => setSettings({...settings, instagram: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link Zalo</label>
+              <input 
+                type="text" 
+                value={settings.zalo}
+                onChange={(e) => setSettings({...settings, zalo: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link Messenger</label>
+              <input 
+                type="text" 
+                value={settings.messenger}
+                onChange={(e) => setSettings({...settings, messenger: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bank Info */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <h3 className="font-bold text-lg text-[#4A2C2C] border-b pb-2">Thông tin Ngân hàng (Thanh toán chuyển khoản)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngân hàng (Mã định danh VD: MB, VCB...)</label>
+              <input 
+                type="text" 
+                value={settings.bankId}
+                onChange={(e) => setSettings({...settings, bankId: e.target.value})}
+                placeholder="MB"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Số tài khoản</label>
+              <input 
+                type="text" 
+                value={settings.bankAccountNumber}
+                onChange={(e) => setSettings({...settings, bankAccountNumber: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tên chủ tài khoản</label>
+              <input 
+                type="text" 
+                value={settings.bankAccountName}
+                onChange={(e) => setSettings({...settings, bankAccountName: e.target.value})}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
               />
             </div>

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { Voucher } from '../../types';
 import { Plus, Edit2, Trash2, X, Tag } from 'lucide-react';
 import { formatPrice } from '../../utils/format';
 
 export const AdminVouchers = () => {
-  const [vouchers, setVouchers] = useState<any[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingVoucher, setEditingVoucher] = useState<any>(null);
+  const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   
   const [formData, setFormData] = useState({
     code: '',
@@ -37,7 +38,7 @@ export const AdminVouchers = () => {
     }
   };
 
-  const handleOpenModal = (voucher: any = null) => {
+  const handleOpenModal = (voucher: Voucher | null = null) => {
     if (voucher) {
       setEditingVoucher(voucher);
       setFormData({

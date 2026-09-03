@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { Product, Settings } from '../../types';
 import { Plus, Edit2, Trash2, X, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { products as mockProducts, bodyCareProducts } from '../../data/mockData';
 
 export const AdminProducts = () => {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [stockFilter, setStockFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<Product | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -74,7 +75,7 @@ export const AdminProducts = () => {
     }
   };
 
-  const handleDelete = async (id: any) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
       try {
         await deleteDoc(doc(db, 'products', String(id)));
@@ -85,7 +86,7 @@ export const AdminProducts = () => {
     }
   };
 
-  const openEditModal = (product: any) => {
+  const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name || '',

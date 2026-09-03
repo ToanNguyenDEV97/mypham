@@ -4,10 +4,11 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { ArrowRight, Calendar, Search } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { blogPosts as mockPosts } from '../../data/mockData';
+import { Post } from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: any) => void, onBack: () => void }) => {
-  const [posts, setPosts] = useState<any[]>([]);
+export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: Post) => void, onBack: () => void }) => {
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');

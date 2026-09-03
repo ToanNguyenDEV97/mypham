@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { Post } from '../../types';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { blogPosts as mockPosts } from '../../data/mockData';
 
 export const AdminPosts = () => {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -64,7 +65,7 @@ export const AdminPosts = () => {
     }
   };
 
-  const openEditModal = (post: any) => {
+  const openEditModal = (post: Post) => {
     setEditingPost(post);
     setFormData({
       title: post.title || '',

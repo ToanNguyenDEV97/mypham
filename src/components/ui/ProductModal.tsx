@@ -1,7 +1,8 @@
+import { Product, Review } from '../../types';
 import { X, Star, ShoppingCart, Heart, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react';
 import { reviews } from '../../data/mockData';
 
-export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onToggleWishlist }: { product: any; onClose: () => void; onAddToCart?: (product: any) => void; isWishlisted?: boolean; onToggleWishlist?: (product: any) => void }) => {
+export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onToggleWishlist }: { product: Product; onClose: () => void; onAddToCart?: (product: Product) => void; isWishlisted?: boolean; onToggleWishlist?: (product: Product) => void }) => {
   if (!product) return null;
 
   // Use the global reviews or product specific reviews if available
@@ -33,7 +34,7 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className={`w-4 h-4 ${i < product.rating ? 'fill-[#F4B5C6] text-[#F4B5C6]' : 'fill-gray-200 text-gray-200'}`} />
                 ))}
-                <span className="text-sm text-gray-500 ml-2 font-medium">{product.rating}.0/5 Đánh giá ({productReviews.length})</span>
+                <span className="text-sm text-gray-500 ml-2 font-medium">{product.rating}.0/5 Đánh giá ({((productReviews as any[]).length)})</span>
               </div>
 
               <div className="flex items-end gap-3 pb-6 border-b border-gray-100">
@@ -68,7 +69,7 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
                 <MessageCircle className="w-5 h-5 text-[#F4B5C6]" /> Đánh Giá Từ Khách Hàng
               </h4>
               <div className="space-y-4">
-                {productReviews.map((review: any) => (
+                {((productReviews as any[]).map)((review: Review) => (
                   <div key={review.id} className="bg-gray-50 p-4 rounded-2xl">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-bold text-[#4A2C2C] text-sm">{review.name}</span>

@@ -1,6 +1,7 @@
+import { Product } from '../../types';
 import { Heart, X, Trash2 } from 'lucide-react';
 
-export const WishlistDrawer = ({ isOpen, onClose, wishlist, onRemove, onAddToCart }: { isOpen: boolean; onClose: () => void; wishlist: any[]; onRemove: (id: number) => void; onAddToCart: (product: any) => void }) => {
+export const WishlistDrawer = ({ isOpen, onClose, wishlist, onRemove, onAddToCart }: { isOpen: boolean; onClose: () => void; wishlist: Product[]; onRemove: (id: string | number) => void; onAddToCart: (product: Product) => void }) => {
   return (
     <>
       {/* Backdrop */}

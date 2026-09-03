@@ -22,11 +22,25 @@ service cloud.firestore {
     }
     
     match /orders/{orderId} {
-      allow create: if 
-        request.resource.data.keys().hasAll(['items', 'totalPrice', 'status'])
+      allow create: if request.auth != null
+        // Xác thực người tạo đơn phải là chính họ
+        && request.resource.data.userId == request.auth.uid
+        // Bắt buộc phải có đủ các trường cơ bản
+        && request.resource.data.keys().hasAll(['userId', 'items', 'totalPrice', 'customerInfo', 'paymentMethod', 'status', 'createdAt'])
+        // Ràng buộc kiểu dữ liệu và giới hạn kích thước
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 50
+        && request.resource.data.totalPrice is number
         && request.resource.data.totalPrice >= 0
-        && (!('finalTotal' in request.resource.data) || request.resource.data.finalTotal >= 0)
-        && request.resource.data.status == 'pending';
+        && (!('finalTotal' in request.resource.data) || (request.resource.data.finalTotal is number && request.resource.data.finalTotal >= 0))
+        && (!('shippingFee' in request.resource.data) || (request.resource.data.shippingFee is number && request.resource.data.shippingFee >= 0))
+        && (!('discountAmount' in request.resource.data) || (request.resource.data.discountAmount is number && request.resource.data.discountAmount >= 0))
+        && request.resource.data.customerInfo is map
+        && request.resource.data.paymentMethod is string
+        && request.resource.data.status == 'pending'
+        // Chặn spam field lạ, chỉ cho phép các field này
+        && request.resource.data.keys().hasOnly(['userId', 'customerInfo', 'items', 'totalPrice', 'shippingFee', 'discountAmount', 'finalTotal', 'paymentMethod', 'status', 'createdAt', 'voucherCode']);
 
       allow get: if request.auth != null && (isAdmin() || request.auth.uid == resource.data.userId);
       allow list, update: if request.auth != null && (isAdmin() || request.auth.uid == resource.data.userId);

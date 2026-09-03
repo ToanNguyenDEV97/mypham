@@ -1,3 +1,4 @@
+import { Review } from '../../types';
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
@@ -5,7 +6,7 @@ import { Trash2, Star, Loader2, MessageSquare } from 'lucide-react';
 
 
 export const AdminReviews = () => {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

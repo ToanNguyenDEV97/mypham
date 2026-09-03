@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { Banner } from '../../types';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export const AdminBanners = () => {
-  const [banners, setBanners] = useState<any[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBanner, setEditingBanner] = useState<any>(null);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -66,7 +67,7 @@ export const AdminBanners = () => {
     }
   };
 
-  const openModal = (banner?: any) => {
+  const openModal = (banner?: Banner | null) => {
     if (banner) {
       setEditingBanner(banner);
       setFormData({

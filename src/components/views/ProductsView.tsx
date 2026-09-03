@@ -7,10 +7,11 @@ import { useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { Product, Settings } from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWishlist, searchQuery = '', settings, onClearSearch }: { onProductClick: (product: any) => void; onAddToCart: (product: any) => void; wishlist: any[]; onToggleWishlist: (product: any) => void; searchQuery?: string; settings?: any; onClearSearch?: () => void; key?: any; }) => {
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWishlist, searchQuery = '', settings, onClearSearch }: { onProductClick: (product: Product) => void; onAddToCart: (product: Product) => void; wishlist: Product[]; onToggleWishlist: (product: Product) => void; searchQuery?: string; settings?: Settings; onClearSearch?: () => void; key?: string; }) => {
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

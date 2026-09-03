@@ -1,14 +1,15 @@
+import { UserData} from '../../types';
 import React, { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { AdminDashboard } from '../admin/AdminDashboard';
 import { EditHeaderSettingsModal } from '../admin/EditHeaderSettingsModal';
-import { Lock, LogOut, Settings } from 'lucide-react';
+import { Lock, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { SEO } from '../ui/SEO';
 
 export const AdminView = ({ onBackToStore }: { onBackToStore: () => void }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isHeaderModalOpen, setIsHeaderModalOpen] = useState(false);
@@ -134,7 +135,7 @@ export const AdminView = ({ onBackToStore }: { onBackToStore: () => void }) => {
                 onClick={() => setIsHeaderModalOpen(true)}
                 className="flex items-center gap-2 text-sm font-medium text-[#4A2C2C] bg-[#FCE8ED] hover:bg-[#F4B5C6] px-3 py-1.5 rounded-full transition-colors"
               >
-                <Settings className="w-4 h-4" /> Sửa Header
+                <SettingsIcon className="w-4 h-4" /> Sửa Header
               </button>
               <span className="text-sm text-gray-600 ml-2">{user.email}</span>
               <button

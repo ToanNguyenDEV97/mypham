@@ -1,67 +1,48 @@
 import React, { useState } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db, functions } from '../../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
 import { Search, Package, Clock, Truck, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Order, CartItem } from '../../types';
 import { SEO } from '../ui/SEO';
 import { formatPrice, parsePrice } from '../../utils/format';
 
 export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
   const [orderId, setOrderId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId.trim()) return;
     
-    if (!auth.currentUser) {
-      setError('Vui lòng đăng nhập để tra cứu đơn hàng của bạn nhằm bảo mật thông tin.');
-      return;
-    }
-    
     setLoading(true);
     setError('');
     setOrder(null);
     
     try {
-      const docRef = doc(db, 'orders', orderId.trim());
-      const docSnap = await getDoc(docRef);
+      const trackOrderFunction = httpsCallable(functions, 'trackOrder');
+      const result = await trackOrderFunction({ orderId: orderId.trim() });
       
-      if (docSnap.exists()) {
-        setOrder({ id: docSnap.id, ...docSnap.data() });
-      } else {
-        setError('Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại.');
+      if (result.data) {
+        setOrder(result.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Đã xảy ra lỗi khi tìm kiếm đơn hàng. Vui lòng thử lại sau.');
+      if (err.code === 'not-found') {
+        setError('Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại.');
+      } else {
+        setError('Đã xảy ra lỗi khi tìm kiếm đơn hàng. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const maskName = (name: string) => {
-    if (!name) return '';
-    const parts = name.trim().split(' ');
-    if (parts.length <= 1) return name.charAt(0) + '***';
-    return parts[0].charAt(0) + '*** ' + parts[parts.length - 1];
-  };
-
-  const maskPhone = (phone: string) => {
-    if (!phone) return '';
-    return phone.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2');
-  };
-
-  const maskAddress = (address: string) => {
-    if (!address) return '';
-    const parts = address.split(',');
-    if (parts.length > 1) {
-      return '***, ' + parts.slice(1).join(',').trim();
-    }
-    return '***' + address.substring(Math.floor(address.length / 2));
-  };
-
+  
+  
+  
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -166,7 +147,7 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
               <div>
                 <h3 className="font-bold text-[#4A2C2C] mb-4">Chi Tiết Sản Phẩm</h3>
                 <div className="space-y-4">
-                  {order.items?.map((item: any, index: number) => (
+                  {order.items?.map((item: CartItem, index: number) => (
                     <div key={index} className="flex gap-4 items-center">
                       <div className="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden shrink-0">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -204,15 +185,15 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
                 <div className="space-y-3 text-sm">
                   <div>
                     <p className="text-gray-500 mb-1">Người nhận</p>
-                    <p className="font-medium text-[#4A2C2C]">{maskName(order.customerInfo?.name)}</p>
+                    <p className="font-medium text-[#4A2C2C]">{order.customerInfo?.name}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 mb-1">Số điện thoại</p>
-                    <p className="font-medium text-[#4A2C2C]">{maskPhone(order.customerInfo?.phone)}</p>
+                    <p className="font-medium text-[#4A2C2C]">{order.customerInfo?.phone}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 mb-1">Địa chỉ giao hàng</p>
-                    <p className="font-medium text-[#4A2C2C] leading-relaxed">{maskAddress(order.customerInfo?.address)}</p>
+                    <p className="font-medium text-[#4A2C2C] leading-relaxed">{order.customerInfo?.address}</p>
                   </div>
                   {order.customerInfo?.note && (
                     <div>
