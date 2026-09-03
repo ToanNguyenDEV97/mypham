@@ -1,13 +1,14 @@
 import React from "react";
 import { ArrowLeft, MapPin, CreditCard, CheckCircle2 } from 'lucide-react';
-import { parsePrice, formatPrice } from '../../utils/format';
+import { parsePrice, formatPrice, parseDate } from '../../utils/format';
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
+import { auth, db, functions } from '../../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { CartItem, Voucher, Order, Settings } from '../../types';
 import { SEO } from '../ui/SEO';
 
-export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }: { cart: CartItem[]; onBack: () => void; onComplete: () => void; onClearCart?: () => void; settings?: Settings }) => {
+export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings, onLoginRequest }: { cart: CartItem[]; onBack: () => void; onComplete: () => void; onClearCart?: () => void; settings?: Settings; onLoginRequest?: () => void }) => {
   const totalPrice = cart.reduce((total, item) => total + parsePrice(item.newPrice || item.price) * item.quantity, 0);
   const shippingFee = totalPrice > 500000 ? 0 : 30000;
   
@@ -62,16 +63,10 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
     fetchProfile();
   }, []);
 
-  const generateOrderId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return `DS${result}`;
-  };
-
   const handleApplyVoucher = async () => {
+    // PRE-CHECK VOUCHER TẠI CLIENT
+    // Lưu ý: Đây chỉ là bước kiểm tra nhanh để nâng cao trải nghiệm UX (báo lỗi ngay không cần chờ submit).
+    // Nguồn sự thật (Source of Truth) và nghiệp vụ trừ lượt sử dụng thực tế sẽ được xử lý bảo mật trên Server/Cloud Function.
     if (!voucherCode.trim()) {
       setVoucherError('Vui lòng nhập mã giảm giá');
       return;
@@ -99,7 +94,7 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
         return;
       }
       
-      if (voucher.expiresAt && new Date(voucher.expiresAt) < new Date()) {
+      if (voucher.expiresAt && parseDate(voucher.expiresAt) < new Date()) {
         setVoucherError('Mã giảm giá đã hết hạn');
         setAppliedVoucher(null);
         return;
@@ -132,44 +127,24 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
     setCheckoutError('');
     setIsSubmitting(true);
     try {
-      const orderData: Partial<Order> = {
-        userId: auth.currentUser?.uid || 'guest',
-        customerInfo: profile,
+      const createOrder = httpsCallable(functions, 'createOrder');
+      const result = await createOrder({
         items: cart,
-        totalPrice,
-        shippingFee,
-        discountAmount,
-        finalTotal,
+        profile,
         paymentMethod,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      };
+        voucherCode: appliedVoucher?.code
+      });
       
-      if (appliedVoucher) {
-        orderData.voucherCode = appliedVoucher.code;
-        
-        // Update voucher used count
-        await updateDoc(doc(db, 'vouchers', appliedVoucher.id), {
-          usedCount: (appliedVoucher.usedCount || 0) + 1
-        });
+      const data = result.data as { orderId?: string };
+      if (data && data.orderId) {
+        setSuccessOrderId(data.orderId);
+        if (onClearCart) onClearCart();
+      } else {
+        throw new Error('Không lấy được mã đơn hàng từ server');
       }
-
-      let newOrderId = generateOrderId();
-      let orderRef = doc(db, 'orders', newOrderId);
-      let orderSnap = await getDoc(orderRef);
-      
-      while (orderSnap.exists()) {
-        newOrderId = generateOrderId();
-        orderRef = doc(db, 'orders', newOrderId);
-        orderSnap = await getDoc(orderRef);
-      }
-
-      await setDoc(orderRef, orderData);
-      setSuccessOrderId(newOrderId);
-      if (onClearCart) onClearCart();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving order:', error);
-      setCheckoutError('Đã xảy ra lỗi trong quá trình đặt hàng. Vui lòng thử lại sau.');
+      setCheckoutError(error instanceof Error ? error.message : "Đã xảy ra lỗi trong quá trình đặt hàng. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }
@@ -290,7 +265,7 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
                     <div className="flex justify-center mb-6">
                       <div className="p-4 bg-white border-2 border-dashed border-[#F4B5C6] rounded-xl">
                         <img 
-                          src={`https://img.vietqr.io/image/${settings?.bankId || 'MB'}-${settings?.bankAccountNumber || '0901234567'}-compact2.png?amount=${finalTotal}&addInfo=DH ${profile.phone || 'ONLINE'}&accountName=${encodeURIComponent(settings?.bankAccountName || 'NGUYEN VAN A')}`} 
+                          src={`https://img.vietqr.io/image/${settings?.bankId || ''}-${settings?.bankAccountNumber || ''}-compact2.png?amount=${finalTotal}&addInfo=DH ${profile.phone || 'ONLINE'}&accountName=${encodeURIComponent(settings?.bankAccountName || '')}`} 
                           alt="VietQR" 
                           className="w-48 h-48 object-contain"
                         />
@@ -300,18 +275,18 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
                     <div className="bg-gray-50 rounded-lg p-4 text-left space-y-2 border border-gray-100">
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
                         <span className="text-gray-500">Ngân hàng:</span>
-                        <span className="font-bold text-[#4A2C2C]">{settings?.bankId || 'MB Bank'}</span>
+                        <span className="font-bold text-[#4A2C2C]">{settings?.bankId || ''}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 py-2">
                         <span className="text-gray-500">Số tài khoản:</span>
                         <span className="font-bold text-[#4A2C2C] flex items-center gap-2">
-                          {settings?.bankAccountNumber || '0901234567'} 
-                          <button type="button" onClick={() => navigator.clipboard.writeText(settings?.bankAccountNumber || '0901234567')} className="text-[#F4B5C6] hover:text-[#4A2C2C] text-xs underline">Copy</button>
+                          {settings?.bankAccountNumber || ''} 
+                          <button type="button" onClick={() => navigator.clipboard.writeText(settings?.bankAccountNumber || '')} className="text-[#F4B5C6] hover:text-[#4A2C2C] text-xs underline">Copy</button>
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm border-b border-gray-100 py-2">
                         <span className="text-gray-500">Chủ tài khoản:</span>
-                        <span className="font-bold text-[#4A2C2C]">{settings?.bankAccountName || 'NGUYEN VAN A'}</span>
+                        <span className="font-bold text-[#4A2C2C]">{settings?.bankAccountName || ''}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm pt-2">
                         <span className="text-gray-500">Số tiền:</span>
@@ -335,10 +310,16 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings }
                 </div>
               )}
 
-              <button type="submit" disabled={isSubmitting} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
-                <CheckCircle2 className="w-5 h-5" /> 
-                {isSubmitting ? 'Đang Xử Lý...' : 'Hoàn Tất Đặt Hàng'}
-              </button>
+              {auth.currentUser ? (
+                <button type="submit" disabled={isSubmitting} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
+                  <CheckCircle2 className="w-5 h-5" /> 
+                  {isSubmitting ? 'Đang Xử Lý...' : 'Hoàn Tất Đặt Hàng'}
+                </button>
+              ) : (
+                <button type="button" onClick={onLoginRequest} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
+                  Đăng nhập để đặt hàng
+                </button>
+              )}
             </form>
           </div>
         </div>

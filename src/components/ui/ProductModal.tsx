@@ -6,7 +6,7 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
   if (!product) return null;
 
   // Use the global reviews or product specific reviews if available
-  const productReviews = product.reviews || reviews;
+  const productReviews = Array.isArray(product.reviews) ? product.reviews : reviews;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -34,7 +34,7 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className={`w-4 h-4 ${i < product.rating ? 'fill-[#F4B5C6] text-[#F4B5C6]' : 'fill-gray-200 text-gray-200'}`} />
                 ))}
-                <span className="text-sm text-gray-500 ml-2 font-medium">{product.rating}.0/5 Đánh giá ({((productReviews as any[]).length)})</span>
+                <span className="text-sm text-gray-500 ml-2 font-medium">{product.rating}.0/5 Đánh giá ({(productReviews.length)})</span>
               </div>
 
               <div className="flex items-end gap-3 pb-6 border-b border-gray-100">
@@ -69,7 +69,7 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
                 <MessageCircle className="w-5 h-5 text-[#F4B5C6]" /> Đánh Giá Từ Khách Hàng
               </h4>
               <div className="space-y-4">
-                {((productReviews as any[]).map)((review: Review) => (
+                {((productReviews as import("../../types").Review[]).map)((review: Review) => (
                   <div key={review.id} className="bg-gray-50 p-4 rounded-2xl">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-bold text-[#4A2C2C] text-sm">{review.name}</span>

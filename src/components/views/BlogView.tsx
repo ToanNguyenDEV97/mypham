@@ -43,7 +43,7 @@ export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: Post) =>
     return matchCategory && matchSearch;
   });
 
-  const formatDate = (dateInput: any) => {
+  const formatDate = (dateInput: import('../../types').TimestampType) => {
     if (!dateInput) return 'Đang cập nhật';
     if (typeof dateInput === 'string') {
       // Check if it's ISO string or just text
@@ -53,7 +53,7 @@ export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: Post) =>
       }
       return dateInput; // Return as is from mock data
     }
-    if (dateInput.toDate) {
+    if (typeof dateInput === "object" && dateInput !== null && "toDate" in dateInput && typeof dateInput.toDate === "function") {
       return dateInput.toDate().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
     return 'Đang cập nhật';

@@ -28,9 +28,9 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
       if (result.data) {
         setOrder(result.data);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      if (err.code === 'not-found') {
+      if ((err as { code?: string }).code === 'not-found') {
         setError('Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại.');
       } else {
         setError('Đã xảy ra lỗi khi tìm kiếm đơn hàng. Vui lòng thử lại sau.');

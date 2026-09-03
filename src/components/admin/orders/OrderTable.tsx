@@ -1,6 +1,6 @@
 import { Order } from '../../../types';
 import { Eye, Package, Printer, X } from 'lucide-react';
-import { formatPrice } from '../../../utils/format';
+import { formatPrice, formatDateStr } from '../../../utils/format';
 import { maskName, maskPhone } from '../../../utils/format';
 import { getStatusBadge, getStatusLabel, getStatusIcon } from '../../../utils/orderStatus';
 
@@ -112,7 +112,7 @@ export const OrderTable = ({
                   </div>
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-500">
-                  {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('vi-VN') : ''}
+                  {formatDateStr(order.createdAt)}
                 </td>
                 <td className="py-3 px-4 text-center">
                   <button 

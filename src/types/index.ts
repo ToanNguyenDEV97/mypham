@@ -1,3 +1,6 @@
+export type ViewType = "home" | "products" | "checkout" | "product_detail" | "admin" | "profile" | "order_tracking" | "blog" | "post_detail";
+export type TimestampType = Date | string | number | { toDate?: () => Date, seconds?: number, nanoseconds?: number };
+
 export interface Product {
   id: string | number; // Some mock data uses number
   name: string;
@@ -55,8 +58,8 @@ export interface Voucher {
   maxUses?: number;
   usedCount?: number;
   usageLimit?: number;
-  createdAt?: any;
-  expiresAt?: any;
+  createdAt?: TimestampType;
+  expiresAt?: TimestampType;
 }
 
 export interface Order {
@@ -71,7 +74,7 @@ export interface Order {
   finalTotal: number;
   paymentMethod: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt?: any;
+  createdAt?: TimestampType;
   voucherCode?: string;
 }
 
@@ -99,7 +102,7 @@ export interface Post {
   readTime: string;
   published: boolean;
   date?: string; // used somewhere
-  createdAt?: any;
+  createdAt?: TimestampType;
 }
 
 export interface Review {
@@ -112,7 +115,7 @@ export interface Review {
   text?: string;
   rating: number;
   comment?: string;
-  createdAt?: any;
+  createdAt?: TimestampType;
 }
 
 export interface Settings {

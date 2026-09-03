@@ -1,11 +1,11 @@
 import { Search, ShoppingCart, Heart, User, Menu, Phone, Mail, Sparkles, ChevronDown } from 'lucide-react';
-import { Settings, UserData } from '../../types';
+import { Settings, UserData, ViewType } from '../../types';
 
 interface HeaderProps {
   settings: Settings;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  setCurrentView: (view: any) => void;
+  setCurrentView: (view: ViewType) => void;
   setIsCartOpen: (open: boolean) => void;
   cartItemsCount: number;
   setIsWishlistOpen: (open: boolean) => void;

@@ -47,7 +47,7 @@ export const AdminView = ({ onBackToStore }: { onBackToStore: () => void }) => {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.');
     }
   };
@@ -75,7 +75,7 @@ export const AdminView = ({ onBackToStore }: { onBackToStore: () => void }) => {
               </p>
             )}
           </div>
-          {(!user || (!isAdmin && !user)) && (
+          {(!user) && (
             <form className="mt-8 space-y-6" onSubmit={handleLogin}>
               <div className="rounded-md shadow-sm space-y-4">
                 <div>

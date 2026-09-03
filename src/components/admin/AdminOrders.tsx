@@ -6,7 +6,7 @@ import { Order, CartItem} from '../../types';
 import { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, updateDoc, doc, orderBy, query } from 'firebase/firestore';
-import { formatPrice, parsePrice, maskName, maskPhone, maskAddress } from '../../utils/format';
+import { formatPrice, parsePrice, maskName, maskPhone, maskAddress, parseDate, formatDateStr } from '../../utils/format';
 import { Eye, X, Package, Clock, Truck, CheckCircle2, XCircle, MapPin, Phone, User, FileText, Printer, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
@@ -273,7 +273,7 @@ export const AdminOrders = () => {
                 <p><strong>Đ/c:</strong> ${maskAddress(order.customerInfo?.address) || ''}</p>
               </div>
               <div class="info-box">
-                <p><strong>Ngày:</strong> ${order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('vi-VN') : ''}</p>
+                <p><strong>Ngày:</strong> ${formatDateStr(order.createdAt)}</p>
                 <p><strong>TT:</strong> ${order.paymentMethod === 'bank' ? 'Chuyển khoản' : 'COD'}</p>
               </div>
             </div>
@@ -466,7 +466,7 @@ export const AdminOrders = () => {
     
     // Date filter
     if (dateFilter !== 'all' && order.createdAt) {
-      const orderDate = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+      const orderDate = parseDate(order.createdAt);
       const now = new Date();
       if (dateFilter === 'today') {
         if (orderDate.toDateString() !== now.toDateString()) return false;
@@ -598,7 +598,7 @@ export const AdminOrders = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-500">
-                      {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+                      {formatDateStr(order.createdAt)}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">

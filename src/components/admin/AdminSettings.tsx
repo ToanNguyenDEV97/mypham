@@ -20,9 +20,9 @@ export const AdminSettings = () => {
     zalo: 'https://zalo.me',
     messenger: 'https://m.me',
     tiktok: '#',
-    bankAccountName: 'NGUYEN VAN A',
-    bankAccountNumber: '0901234567',
-    bankId: 'MB',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    bankId: '',
     topBarText: 'Miễn phí giao hàng đơn từ 500k',
     categories: ['Tất cả', 'Làm sạch', 'Chăm sóc da', 'Trang điểm', 'Chăm sóc cơ thể'],
     brands: ['DS Tiên', 'Rohto', 'Romand', 'Luminous']

@@ -9,7 +9,14 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { SEO } from '../ui/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishlist, onNavigateToBlog, onPostClick }: any) => {
+export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishlist, onNavigateToBlog, onPostClick }: {
+  setSelectedProduct: (p: Product) => void;
+  addToCart: (p: Product) => void;
+  wishlist: Product[];
+  toggleWishlist: (p: Product) => void;
+  onNavigateToBlog: () => void;
+  onPostClick: (p: Post) => void;
+}) => {
   const [homeProducts, setHomeProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [recentPosts, setRecentPosts] = useState<Post[]>(blogPosts);
@@ -31,8 +38,8 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
         setHomeProducts(Array.from(combinedMap.values()).slice(0, 4));
 
         const fetchedBanners = bannersSnap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter((b: any) => b.isActive !== false);
+          .map(doc => ({ id: doc.id, ...doc.data() } as Banner))
+          .filter(b => b.isActive !== false);
         setBanners(fetchedBanners);
       } catch (error) {
         console.error('Error fetching home data', error);

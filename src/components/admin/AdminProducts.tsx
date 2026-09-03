@@ -61,7 +61,10 @@ export const AdminProducts = () => {
     try {
       const dataToSave = {
         ...formData,
-        newPrice: formData.price,
+        price: Number(formData.price) || 0,
+        newPrice: Number(formData.price) || 0,
+        discount: Number(formData.discount) || 0,
+        stock: Number(formData.stock) || 0,
       };
       if (editingProduct) {
         await setDoc(doc(db, 'products', String(editingProduct.id)), dataToSave);

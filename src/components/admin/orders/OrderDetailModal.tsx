@@ -1,6 +1,6 @@
 import { Order, CartItem } from '../../../types';
 import { X, Package, MapPin, Phone, User, FileText, Printer } from 'lucide-react';
-import { formatPrice, parsePrice } from '../../../utils/format';
+import { formatPrice, parsePrice, parseDate } from '../../../utils/format';
 import { maskName, maskPhone, maskAddress } from '../../../utils/format';
 import { getStatusBadge, getStatusLabel, getStatusIcon } from '../../../utils/orderStatus';
 
@@ -130,9 +130,9 @@ export const OrderDetailModal = ({
                       <div className="text-xs text-gray-500 mt-1">SL: {item.quantity}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-bold text-[#F4B5C6]">{formatPrice(typeof item.newPrice !== 'undefined' ? item.newPrice : item.price as any)}</div>
+                      <div className="text-sm font-bold text-[#F4B5C6]">{formatPrice(typeof item.newPrice !== 'undefined' ? item.newPrice : item.price || 0)}</div>
                       <div className="text-xs text-gray-400 line-through">
-                         {item.newPrice && formatPrice(item.price as any)}
+                         {item.newPrice && formatPrice(item.price || 0)}
                       </div>
                     </div>
                   </div>
@@ -180,7 +180,7 @@ export const OrderDetailModal = ({
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Ngày đặt hàng</p>
                   <p className="text-sm font-medium text-gray-900">
-                    {selectedOrder.createdAt?.toDate ? selectedOrder.createdAt.toDate().toLocaleString('vi-VN') : 'Không rõ'}
+                    {selectedOrder.createdAt ? parseDate(selectedOrder.createdAt).toLocaleString('vi-VN') : 'Không rõ'}
                   </p>
                 </div>
                 {selectedOrder.customerInfo?.note && (

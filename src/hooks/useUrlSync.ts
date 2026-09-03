@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { ViewType, Product, Post } from '../types';
 
 export const useUrlSync = (
   currentView: string,
-  setCurrentView: (view: any) => void,
+  setCurrentView: (view: ViewType) => void,
   searchQuery: string,
   setSearchQuery: (q: string) => void,
-  selectedProduct: any,
-  setSelectedProduct: (p: any) => void,
-  selectedPost: any,
-  setSelectedPost: (p: any) => void
+  selectedProduct: Product | null,
+  setSelectedProduct: (p: Product | null) => void,
+  selectedPost: Post | null,
+  setSelectedPost: (p: Post | null) => void
 ) => {
   const isInitialLoad = useRef(true);
 
@@ -60,7 +61,7 @@ export const useUrlSync = (
       const id = params.get('id');
       const postId = params.get('postId');
       
-      setCurrentView(view as any);
+      setCurrentView(view as ViewType);
       setSearchQuery(q);
       
       if (view === 'product_detail' && id) {
@@ -68,7 +69,7 @@ export const useUrlSync = (
           const docRef = doc(db, 'products', id);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setSelectedProduct({ id: docSnap.id, ...docSnap.data() });
+            setSelectedProduct({ id: docSnap.id, ...docSnap.data() } as Product);
           }
         } catch (error) {
           console.error('Error fetching product from URL:', error);
@@ -80,7 +81,7 @@ export const useUrlSync = (
           const docRef = doc(db, 'posts', postId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setSelectedPost({ id: docSnap.id, ...docSnap.data() });
+            setSelectedPost({ id: docSnap.id, ...docSnap.data() } as Post);
           }
         } catch (error) {
           console.error('Error fetching post from URL:', error);

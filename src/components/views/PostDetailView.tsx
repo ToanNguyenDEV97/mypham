@@ -10,7 +10,7 @@ export const PostDetailView = ({ post, onBack }: { post: Post, onBack: () => voi
 
   if (!post) return null;
 
-  const formatDate = (dateInput: any) => {
+  const formatDate = (dateInput: import('../../types').TimestampType) => {
     if (!dateInput) return 'Đang cập nhật';
     if (typeof dateInput === 'string') {
       const date = new Date(dateInput);
@@ -19,7 +19,7 @@ export const PostDetailView = ({ post, onBack }: { post: Post, onBack: () => voi
       }
       return dateInput;
     }
-    if (dateInput.toDate) {
+    if (typeof dateInput === "object" && dateInput !== null && "toDate" in dateInput && typeof dateInput.toDate === "function") {
       return dateInput.toDate().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
     return 'Đang cập nhật';

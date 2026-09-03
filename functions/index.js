@@ -30,10 +30,12 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
   try {
     let totalPrice = 0;
     const orderItems = [];
+    const productUpdates = [];
 
     // Lặp qua từng sản phẩm để lấy giá thật từ Firestore
     for (const item of items) {
-      const productSnap = await db.collection('products').doc(item.id).get();
+      const productRef = db.collection('products').doc(item.id);
+      const productSnap = await productRef.get();
       if (!productSnap.exists) {
         throw new functions.https.HttpsError(
           'not-found',
@@ -42,6 +44,14 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
       }
       
       const productData = productSnap.data();
+      
+      if (productData.stock !== undefined && productData.stock < item.quantity) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          `Sản phẩm "${productData.name || item.id}" không đủ số lượng trong kho (còn ${productData.stock}).`
+        );
+      }
+      
       const realPrice = parsePrice(productData.newPrice || productData.price);
       
       totalPrice += realPrice * item.quantity;
@@ -54,6 +64,10 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
         newPrice: productData.newPrice,
         image: productData.image || null
       });
+      
+      if (productData.stock !== undefined) {
+        productUpdates.push({ ref: productRef, quantity: item.quantity });
+      }
     }
 
     // Tính phí ship
@@ -62,25 +76,50 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
     // Tính giảm giá (Nếu có voucher)
     let discountAmount = 0;
     let appliedVoucher = null;
+    let voucherDocRef = null;
     
     if (voucherCode) {
       const voucherSnap = await db.collection('vouchers').where('code', '==', voucherCode.toUpperCase()).get();
       if (!voucherSnap.empty) {
-        const vData = voucherSnap.docs[0].data();
-        if (vData.isActive) {
-          if (vData.discountType === 'percentage') {
-            discountAmount = (totalPrice * vData.discountValue) / 100;
-          } else {
-            discountAmount = vData.discountValue;
-          }
-          if (discountAmount > totalPrice) discountAmount = totalPrice;
-          
-          appliedVoucher = {
-            code: vData.code,
-            discountValue: vData.discountValue,
-            discountType: vData.discountType
-          };
+        const docSnap = voucherSnap.docs[0];
+        const vData = docSnap.data();
+        
+        // Validate voucher
+        if (!vData.isActive) {
+          throw new functions.https.HttpsError('failed-precondition', 'Mã giảm giá không hoạt động');
         }
+        
+        if (vData.expiresAt) {
+          const expiry = vData.expiresAt.toDate ? vData.expiresAt.toDate() : new Date(vData.expiresAt);
+          if (expiry < new Date()) {
+            throw new functions.https.HttpsError('failed-precondition', 'Mã giảm giá đã hết hạn');
+          }
+        }
+        
+        if (vData.usageLimit > 0 && (vData.usedCount || 0) >= vData.usageLimit) {
+          throw new functions.https.HttpsError('failed-precondition', 'Mã giảm giá đã hết lượt sử dụng');
+        }
+        
+        if (vData.minOrderValue > totalPrice) {
+          throw new functions.https.HttpsError('failed-precondition', `Đơn hàng chưa đạt giá trị tối thiểu để áp dụng mã này`);
+        }
+
+        if (vData.discountType === 'percentage') {
+          discountAmount = (totalPrice * vData.discountValue) / 100;
+        } else {
+          discountAmount = vData.discountValue;
+        }
+        if (discountAmount > totalPrice) discountAmount = totalPrice;
+        
+        appliedVoucher = {
+          code: vData.code,
+          discountValue: vData.discountValue,
+          discountType: vData.discountType
+        };
+        
+        voucherDocRef = docSnap.ref;
+      } else {
+        throw new functions.https.HttpsError('not-found', 'Mã giảm giá không tồn tại');
       }
     }
 
@@ -104,13 +143,31 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     };
 
-    // Ghi vào Firestore
-    await db.collection('orders').doc(newOrderId).set(orderData);
+    // Run order creation, voucher count increment, and product stock decrement in a batch
+    const batch = db.batch();
+    batch.set(db.collection('orders').doc(newOrderId), orderData);
+    
+    if (voucherDocRef) {
+      batch.update(voucherDocRef, {
+        usedCount: admin.firestore.FieldValue.increment(1)
+      });
+    }
+    
+    for (const update of productUpdates) {
+      batch.update(update.ref, {
+        stock: admin.firestore.FieldValue.increment(-update.quantity)
+      });
+    }
+    
+    await batch.commit();
 
     return { success: true, orderId: newOrderId };
 
   } catch (error) {
     console.error('Lỗi khi tạo đơn hàng:', error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
     throw new functions.https.HttpsError('internal', 'Đã xảy ra lỗi hệ thống khi xử lý đơn hàng.');
   }
 });
@@ -186,6 +243,9 @@ exports.trackOrder = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error('Lỗi khi tra cứu đơn hàng:', error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
     throw new functions.https.HttpsError('internal', 'Đã xảy ra lỗi hệ thống khi tra cứu đơn hàng.');
   }
 });

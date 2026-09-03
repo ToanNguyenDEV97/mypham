@@ -214,14 +214,14 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
               </div>
 
               <div className="space-y-6">
-                {displayReviews.map((review: Product) => (
+                {displayReviews.map((review: import("../../types").Review) => (
                   <div key={review.id} className="bg-gray-50 p-6 rounded-3xl">
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-[#4A2C2C]">{review.name}</span>
-                        {(review as any).createdAt && (
+                        {review.createdAt && (
                           <span className="text-xs text-gray-400">
-                            {(review as any).createdAt.toDate ? (review as any).createdAt.toDate().toLocaleDateString('vi-VN') : new Date((review as any).createdAt).toLocaleDateString('vi-VN')}
+                            {typeof review.createdAt === 'object' && review.createdAt !== null && 'toDate' in review.createdAt && typeof review.createdAt.toDate === 'function' ? review.createdAt.toDate().toLocaleDateString('vi-VN') : new Date(review.createdAt as string | number | Date).toLocaleDateString('vi-VN')}
                           </span>
                         )}
                       </div>
@@ -231,7 +231,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
                         ))}
                       </div>
                     </div>
-                    <p className="text-gray-600 leading-relaxed">{(review as any).text}</p>
+                    <p className="text-gray-600 leading-relaxed">{review.text || review.comment}</p>
                   </div>
                 ))}
               </div>

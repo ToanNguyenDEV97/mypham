@@ -38,9 +38,9 @@ export const AdminReviews = () => {
     }
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: import('../../types').TimestampType) => {
     if (!timestamp) return 'N/A';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date = typeof timestamp === "object" && "toDate" in timestamp && typeof timestamp.toDate === "function" ? timestamp.toDate() : new Date(timestamp as string | number);
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',

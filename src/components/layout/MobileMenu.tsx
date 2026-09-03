@@ -1,9 +1,9 @@
 import { X, ChevronDown } from 'lucide-react';
-import { Settings } from '../../types';
+import { Settings, ViewType } from '../../types';
 
 interface MobileMenuProps {
-  settings: any;
-  setCurrentView: (view: any) => void;
+  settings: Settings;
+  setCurrentView: (view: ViewType) => void;
   setSearchQuery: (q: string) => void;
   setProductsKey: (cb: (k: number) => number) => void;
   setIsMenuOpen: (open: boolean) => void;

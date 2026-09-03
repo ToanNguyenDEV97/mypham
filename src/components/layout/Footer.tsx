@@ -1,9 +1,9 @@
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Sparkles } from 'lucide-react';
-import { Settings } from '../../types';
+import { Settings, ViewType } from '../../types';
 
 interface FooterProps {
   settings: Settings;
-  setCurrentView: (view: any) => void;
+  setCurrentView: (view: ViewType) => void;
   setSearchQuery: (q: string) => void;
   setProductsKey: (cb: (k: number) => number) => void;
   setIsMenuOpen: (open: boolean) => void;

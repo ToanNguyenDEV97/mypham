@@ -35,8 +35,8 @@ export const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         });
       }
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -63,8 +63,8 @@ export const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         });
       }
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
