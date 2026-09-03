@@ -30,8 +30,8 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [currentView, setCurrentView] = useState<'home' | 'products' | 'checkout' | 'product_detail' | 'admin' | 'profile' | 'order_tracking' | 'blog' | 'post_detail'>('home');
-  const [selectedPost, setSelectedPost] = useState<Product | null>(null);
+  const [currentView, setCurrentView] = useState<import('./types').ViewType>('home');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [productsKey, setProductsKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -39,7 +39,7 @@ export default function App() {
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [user, setUser] = useState<Product | null>(null);
+  const [user, setUser] = useState<import('firebase/auth').User | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useUrlSync(

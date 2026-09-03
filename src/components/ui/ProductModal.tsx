@@ -58,11 +58,32 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
               </div>
 
               <div className="flex items-end gap-3 pb-6 border-b border-gray-100">
-                <span className="font-bold text-[#F4B5C6] text-3xl">{product.newPrice}</span>
+                <span className="font-bold text-[#F4B5C6] text-3xl">{product.newPrice || product.price}</span>
                 {product.oldPrice && <span className="text-lg text-gray-400 line-through mb-1">{product.oldPrice}</span>}
                 {product.discount && (
                   <span className="bg-[#FCE8ED] text-[#F4B5C6] text-xs font-bold px-2 py-1 rounded mb-1">{product.discount}</span>
                 )}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500 block mb-1">Thương hiệu</span>
+                  <span className="font-medium text-[#4A2C2C]">{product.details?.brand || product.brand || 'Đang cập nhật'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block mb-1">Xuất xứ</span>
+                  <span className="font-medium text-[#4A2C2C]">{product.details?.origin || 'Đang cập nhật'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block mb-1">Dung tích</span>
+                  <span className="font-medium text-[#4A2C2C]">{product.details?.volume || 'Đang cập nhật'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block mb-1">Loại da</span>
+                  <span className="font-medium text-[#4A2C2C]">{product.details?.skinType || 'Mọi loại da'}</span>
+                </div>
               </div>
             </div>
 
@@ -80,9 +101,9 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
               <h4 className="text-lg font-bold text-[#4A2C2C] mb-3 flex items-center gap-2">
                  <ShieldCheck className="w-5 h-5 text-[#F4B5C6]" /> Thành Phần Chính
               </h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
                 {product.ingredients || "Đang cập nhật thành phần cho sản phẩm này."}
-              </p>
+              </div>
             </div>
 
             <div className="pt-6 border-t border-gray-100">

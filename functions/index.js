@@ -125,9 +125,16 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
 
     const finalTotal = totalPrice + shippingFee - discountAmount;
 
-    // Tạo mã đơn hàng random (VD: 8xA9)
-    const generateOrderId = () => Math.random().toString(36).substring(2, 6).toUpperCase();
-    const newOrderId = generateOrderId();
+    // Tạo mã đơn hàng random 6 ký tự
+    const generateOrderId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+    let newOrderId = generateOrderId();
+    let orderSnap = await db.collection('orders').doc(newOrderId).get();
+    
+    // Kiểm tra để đảm bảo không bị trùng lặp orderId
+    while (orderSnap.exists) {
+      newOrderId = generateOrderId();
+      orderSnap = await db.collection('orders').doc(newOrderId).get();
+    }
 
     const orderData = {
       userId: context.auth.uid,

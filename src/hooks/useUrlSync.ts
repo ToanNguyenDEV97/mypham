@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { ViewType, Product, Post } from '../types';
 
 export const useUrlSync = (
-  currentView: string,
+  currentView: ViewType,
   setCurrentView: (view: ViewType) => void,
   searchQuery: string,
   setSearchQuery: (q: string) => void,

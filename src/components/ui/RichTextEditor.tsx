@@ -220,7 +220,7 @@ export const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base focus:outline-none min-h-[300px] max-h-[500px] overflow-y-auto p-4 custom-scrollbar',
+        class: 'prose prose-sm sm:prose-base focus:outline-none min-h-[300px] max-h-[800px] overflow-y-auto p-4 custom-scrollbar',
       },
     },
   });

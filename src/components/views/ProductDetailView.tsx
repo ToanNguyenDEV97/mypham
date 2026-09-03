@@ -131,6 +131,28 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
             {product.oldPrice && <span className="text-xl text-gray-400 line-through mb-1">{product.oldPrice}</span>}
           </div>
 
+          <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
+            <h4 className="font-bold text-[#4A2C2C] mb-4">Thông số sản phẩm</h4>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">Thương hiệu</span>
+                <span className="font-medium text-[#4A2C2C]">{product.details?.brand || product.brand || 'Đang cập nhật'}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">Xuất xứ</span>
+                <span className="font-medium text-[#4A2C2C]">{product.details?.origin || 'Đang cập nhật'}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">Dung tích</span>
+                <span className="font-medium text-[#4A2C2C]">{product.details?.volume || 'Đang cập nhật'}</span>
+              </div>
+              <div className="flex justify-between pb-2">
+                <span className="text-gray-500">Loại da</span>
+                <span className="font-medium text-[#4A2C2C]">{product.details?.skinType || 'Mọi loại da'}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-4 mb-8 text-sm text-gray-600">
              <div className="flex items-center gap-3"><Truck className="w-5 h-5 text-[#F4B5C6]" /> Miễn phí vận chuyển cho đơn hàng từ 500.000đ</div>
              <div className="flex items-center gap-3"><RefreshCw className="w-5 h-5 text-[#F4B5C6]" /> Đổi trả miễn phí trong 7 ngày</div>
@@ -186,8 +208,8 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
           )}
           
           {activeTab === 'ingredients' && (
-            <div className="prose max-w-none text-gray-600 leading-relaxed">
-              <p>{product.ingredients || "Aqua, Glycerin, Niacinamide, Sodium Hyaluronate, Panthenol, Ceramide NP... Đang cập nhật thành phần chi tiết."}</p>
+            <div className="prose max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {product.ingredients || "Đang cập nhật thành phần chi tiết."}
             </div>
           )}
 

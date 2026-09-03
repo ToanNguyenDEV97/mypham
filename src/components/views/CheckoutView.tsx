@@ -3,6 +3,7 @@ import { ArrowLeft, MapPin, CreditCard, CheckCircle2 } from 'lucide-react';
 import { parsePrice, formatPrice, parseDate } from '../../utils/format';
 import { useState, useEffect } from 'react';
 import { auth, db, functions } from '../../lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, collection, addDoc, setDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { CartItem, Voucher, Order, Settings } from '../../types';
@@ -37,23 +38,37 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings, 
 
   const finalTotal = totalPrice + shippingFee - discountAmount;
 
+  const [user, setUser] = useState<User | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthInitialized(true);
+      if (!currentUser && onLoginRequest) {
+        onLoginRequest();
+      }
+    });
+    return () => unsubscribe();
+  }, [onLoginRequest]);
+
   useEffect(() => {
     const fetchProfile = async () => {
-      if (auth.currentUser) {
+      if (user) {
         try {
-          const docRef = doc(db, 'users', auth.currentUser.uid);
+          const docRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists() && docSnap.data().shippingProfile) {
             const data = docSnap.data().shippingProfile;
             setProfile({ 
-              name: data.name || auth.currentUser.displayName || '', 
+              name: data.name || user.displayName || '', 
               phone: data.phone || '', 
-              email: auth.currentUser.email || '',
+              email: user.email || '',
               address: data.address ? (data.address + (data.city ? ', ' + data.city : '')) : '',
               note: ''
             });
           } else {
-            setProfile(prev => ({ ...prev, name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' }));
+            setProfile(prev => ({ ...prev, name: user.displayName || '', email: user.email || '' }));
           }
         } catch (error) {
           console.error(error);
@@ -61,7 +76,7 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings, 
       }
     };
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const handleApplyVoucher = async () => {
     // PRE-CHECK VOUCHER TẠI CLIENT
@@ -176,6 +191,31 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings, 
           <button onClick={onComplete} className="bg-[#4A2C2C] text-white px-8 py-4 rounded-full font-bold hover:bg-[#F4B5C6] hover:text-[#4A2C2C] transition-colors w-full sm:w-auto">
             Tiếp tục mua sắm
           </button>
+        </div>
+      </>
+    );
+  }
+
+  if (authInitialized && !user) {
+    return (
+      <>
+        <SEO title="Thanh Toán - DS Tiên Cosmetics" />
+        <div className="max-w-3xl mx-auto px-4 md:px-8 py-20 text-center animate-in fade-in duration-300">
+          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CreditCard className="w-10 h-10 text-gray-400" />
+          </div>
+          <h2 className="text-3xl font-serif font-bold text-[#4A2C2C] mb-4">Vui lòng đăng nhập</h2>
+          <p className="text-gray-600 mb-8 max-w-lg mx-auto">
+            Bạn cần đăng nhập hoặc tạo tài khoản để có thể tiếp tục tiến hành thanh toán đơn hàng.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button onClick={onBack} className="px-6 py-3 border border-gray-200 text-gray-600 rounded-full font-medium hover:bg-gray-50 transition-colors">
+              Quay lại giỏ hàng
+            </button>
+            <button onClick={onLoginRequest} className="bg-[#4A2C2C] text-white px-8 py-3 rounded-full font-bold hover:bg-[#F4B5C6] hover:text-[#4A2C2C] transition-colors">
+              Đăng nhập ngay
+            </button>
+          </div>
         </div>
       </>
     );
@@ -310,16 +350,10 @@ export const CheckoutView = ({ cart, onBack, onComplete, onClearCart, settings, 
                 </div>
               )}
 
-              {auth.currentUser ? (
-                <button type="submit" disabled={isSubmitting} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
-                  <CheckCircle2 className="w-5 h-5" /> 
-                  {isSubmitting ? 'Đang Xử Lý...' : 'Hoàn Tất Đặt Hàng'}
-                </button>
-              ) : (
-                <button type="button" onClick={onLoginRequest} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
-                  Đăng nhập để đặt hàng
-                </button>
-              )}
+              <button type="submit" disabled={isSubmitting} className="w-full mt-8 bg-[#4A2C2C] text-white hover:bg-[#F4B5C6] disabled:opacity-50 disabled:cursor-not-allowed font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 text-lg">
+                <CheckCircle2 className="w-5 h-5" /> 
+                {isSubmitting ? 'Đang Xử Lý...' : 'Hoàn Tất Đặt Hàng'}
+              </button>
             </form>
           </div>
         </div>
