@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #FCE8ED;
+    border-radius: 20px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #F4B5C6;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0.5cm;
+    size: auto;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-waybill-container, .print-waybill-container * {
+    visibility: visible;
+  }
+  .print-waybill-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

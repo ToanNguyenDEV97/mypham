@@ -1,0 +1,47 @@
+{
+  "collections": {
+    "users": {
+      "rules": "allow read: if request.auth != null; allow write: if request.auth != null && request.auth.uid == resource.id; allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;",
+      "schema": {
+        "email": "string",
+        "displayName": "string",
+        "isAdmin": "boolean"
+      }
+    },
+    "products": {
+      "rules": "allow read: if true; allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;",
+      "schema": {
+        "name": "string",
+        "description": "string",
+        "ingredients": "string",
+        "image": "string",
+        "newPrice": "string",
+        "oldPrice": "string",
+        "discount": "string",
+        "rating": "number",
+        "category": "string",
+        "brand": "string",
+        "sold": "number"
+      }
+    },
+    "orders": {
+      "rules": "allow create: if request.auth != null; allow read, update: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true); allow delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;",
+      "schema": {
+        "userId": "string",
+        "total": "number",
+        "status": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "posts": {
+      "rules": "allow read: if true; allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;",
+      "schema": {
+        "title": "string",
+        "content": "string",
+        "category": "string",
+        "image": "string",
+        "createdAt": "timestamp"
+      }
+    }
+  }
+}

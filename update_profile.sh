@@ -1,0 +1,1 @@
+sed -i 's/const \[loading, setLoading\] = useState(true);/const [loading, setLoading] = useState(true);\n  const [activeTab, setActiveTab] = useState<'"'"'profile'"'"' | '"'"'orders'"'"'>('"'"'profile'"'"');\n  const [orders, setOrders] = useState<any[]>([]);\n  const [loadingOrders, setLoadingOrders] = useState(false);/' src/components/views/ProfileView.tsx
