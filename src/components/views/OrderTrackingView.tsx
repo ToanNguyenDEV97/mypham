@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '../../lib/firebase';
+import { auth, db } from '../../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Search, Package, Clock, Truck, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react';
 import { SEO } from '../ui/SEO';
@@ -14,6 +14,11 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId.trim()) return;
+    
+    if (!auth.currentUser) {
+      setError('Vui lòng đăng nhập để tra cứu đơn hàng của bạn nhằm bảo mật thông tin.');
+      return;
+    }
     
     setLoading(true);
     setError('');
