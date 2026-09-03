@@ -6,6 +6,7 @@ import { auth, db } from '../../lib/firebase';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Product, Review } from '../../types';
 import { SEO } from '../ui/SEO';
+import DOMPurify from 'dompurify';
 
 export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onToggleWishlist, onProductClick }: { product: Product; onBack: () => void; onAddToCart: (p: Product) => void; wishlist: Product[]; onToggleWishlist: (p: Product) => void; onProductClick: (p: Product) => void; }) => {
   const [activeTab, setActiveTab] = useState<'description' | 'ingredients' | 'reviews'>('description');
@@ -13,7 +14,10 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const isWishlisted = wishlist.some((w: Product) => w.id === product.id);
+  
+  const imagesList = product.images && product.images.length > 0 ? product.images : [product.image];
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -84,9 +88,22 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
       <div className="flex flex-col lg:flex-row gap-12 mb-16">
         {/* Product Image */}
         <div className="lg:w-1/2">
-          <div className="bg-[#FCE8ED] rounded-3xl overflow-hidden aspect-square relative">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover absolute inset-0" />
+          <div className="bg-[#FCE8ED] rounded-3xl overflow-hidden aspect-square relative mb-4">
+            <img src={imagesList[currentImageIdx]} alt={product.name} className="w-full h-full object-cover absolute inset-0 transition-opacity duration-300" />
           </div>
+          {imagesList.length > 1 && (
+            <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+              {imagesList.map((img, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setCurrentImageIdx(idx)}
+                  className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-colors ${currentImageIdx === idx ? 'border-[#F4B5C6]' : 'border-transparent hover:border-[#FCE8ED]'}`}
+                >
+                  <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover absolute inset-0" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Info */}
@@ -162,9 +179,10 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
 
         <div className="min-h-[200px]">
           {activeTab === 'description' && (
-            <div className="prose max-w-none text-gray-600 leading-relaxed">
-              <p>{product.description || "Đang cập nhật mô tả cho sản phẩm này. Xin vui lòng quay lại sau. Sản phẩm mang đến trải nghiệm tuyệt vời cho làn da của bạn, được nghiên cứu và phát triển với công thức độc quyền..."}</p>
-            </div>
+            <div 
+              className="prose max-w-none text-gray-600 leading-relaxed prose-headings:text-[#4A2C2C] prose-a:text-[#F4B5C6] hover:prose-a:text-[#4A2C2C] prose-img:rounded-xl"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description || '<p>Đang cập nhật mô tả cho sản phẩm này.</p>') }}
+            />
           )}
           
           {activeTab === 'ingredients' && (

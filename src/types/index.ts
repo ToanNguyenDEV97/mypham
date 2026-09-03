@@ -13,6 +13,7 @@ export interface Product {
   sold?: number;
   stock?: number;
   image: string;
+  images?: string[];
   rating?: number;
   reviews?: number | Review[]; // sometimes reviews is an array
   brand?: string;

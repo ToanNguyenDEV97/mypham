@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react';
 import { Post} from '../../types';
 import { SEO } from '../ui/SEO';
+import DOMPurify from 'dompurify';
 
 export const PostDetailView = ({ post, onBack }: { post: Post, onBack: () => void }) => {
   useEffect(() => {
@@ -74,7 +75,7 @@ export const PostDetailView = ({ post, onBack }: { post: Post, onBack: () => voi
 
             <div 
               className="prose prose-lg max-w-none text-gray-600 leading-relaxed prose-headings:text-[#4A2C2C] prose-a:text-[#F4B5C6] hover:prose-a:text-[#4A2C2C] prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: post.content || '<p>Đang cập nhật nội dung...</p>' }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '<p>Đang cập nhật nội dung...</p>') }}
             />
           </article>
         </div>

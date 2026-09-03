@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../../lib/firebase';
+import React, { useState, useEffect, useRef } from 'react';
+import { db, storage } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Product, Settings } from '../../types';
-import { Plus, Edit2, Trash2, X, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Filter, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { products as mockProducts, bodyCareProducts } from '../../data/mockData';
+
+import { RichTextEditor } from '../ui/RichTextEditor';
 
 export const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -14,17 +17,21 @@ export const AdminProducts = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [stockFilter, setStockFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const itemsPerPage = 8;
   
   const [settings, setSettings] = useState<Product | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     price: '',
     discount: '',
     category: '',
     brand: '',
     image: '',
+    images: [] as string[],
     stock: ''
   });
 
@@ -61,6 +68,7 @@ export const AdminProducts = () => {
     try {
       const dataToSave = {
         ...formData,
+        image: formData.images.length > 0 ? formData.images[0] : formData.image,
         price: Number(formData.price) || 0,
         newPrice: Number(formData.price) || 0,
         discount: Number(formData.discount) || 0,
@@ -91,15 +99,19 @@ export const AdminProducts = () => {
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+    const productImages = product.images || (product.image ? [product.image] : []);
     setFormData({
       name: product.name || '',
+      description: product.description || '',
       price: product.newPrice || '',
       discount: product.discount || '',
       category: product.category || '',
       brand: product.brand || '',
       image: product.image || '',
+      images: productImages,
       stock: product.stock || '100'
     });
+    setUploadProgress(null);
     setIsModalOpen(true);
   };
 
@@ -107,14 +119,67 @@ export const AdminProducts = () => {
     setEditingProduct(null);
     setFormData({
       name: '',
+      description: '',
       price: '',
       discount: '',
       category: '',
       brand: '',
       image: '',
+      images: [],
       stock: '100'
     });
+    setUploadProgress(null);
     setIsModalOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
+    if (!files.length) return;
+
+    setUploadProgress(0);
+    const uploadedUrls: string[] = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`Kích thước file ${file.name} vượt quá 2MB.`);
+        continue;
+      }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        alert(`Chỉ hỗ trợ định dạng JPG, PNG hoặc WebP (${file.name}).`);
+        continue;
+      }
+
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `products/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      await new Promise<void>((resolve) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress((i * 100 + progress) / files.length);
+          },
+          (error) => {
+            console.error("Lỗi upload ảnh:", error);
+            resolve();
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            uploadedUrls.push(downloadURL);
+            resolve();
+          }
+        );
+      });
+    }
+
+    if (uploadedUrls.length > 0) {
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...uploadedUrls] }));
+    }
+    setUploadProgress(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const displayProducts = (() => {
@@ -286,6 +351,13 @@ export const AdminProducts = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả sản phẩm</label>
+                <RichTextEditor 
+                  content={formData.description}
+                  onChange={content => setFormData({...formData, description: content})}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Giá bán</label>
@@ -348,14 +420,48 @@ export const AdminProducts = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL Hình ảnh</label>
-                  <input 
-                    type="url" 
-                    value={formData.image}
-                    onChange={e => setFormData({...formData, image: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
-                    placeholder="https://..."
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hình ảnh sản phẩm</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    {formData.images.map((url, idx) => (
+                      <div key={idx} className="relative aspect-square group border border-gray-200 rounded-lg overflow-hidden bg-white">
+                        <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-contain" />
+                        <button 
+                          type="button"
+                          onClick={(e) => { 
+                            e.preventDefault(); 
+                            setFormData(prev => ({...prev, images: prev.images.filter((_, i) => i !== idx)})); 
+                          }}
+                          className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    <label className="relative aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer overflow-hidden">
+                      <div className="text-center p-2">
+                        <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                        <span className="text-xs text-gray-500 block">Thêm ảnh</span>
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/jpeg, image/png, image/webp"
+                        multiple
+                        onChange={handleImageUpload}
+                        ref={fileInputRef}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={uploadProgress !== null}
+                      />
+                      {uploadProgress !== null && (
+                        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center">
+                          <div className="text-[#F4B5C6] font-medium text-lg mb-1">{Math.round(uploadProgress)}%</div>
+                          <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#F4B5C6]" style={{ width: `${uploadProgress}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                    </label>
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end gap-3">

@@ -1,12 +1,17 @@
+import React, { useState } from 'react';
 import { Product, Review } from '../../types';
 import { X, Star, ShoppingCart, Heart, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react';
 import { reviews } from '../../data/mockData';
+import DOMPurify from 'dompurify';
 
 export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onToggleWishlist }: { product: Product; onClose: () => void; onAddToCart?: (product: Product) => void; isWishlisted?: boolean; onToggleWishlist?: (product: Product) => void }) => {
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+
   if (!product) return null;
 
   // Use the global reviews or product specific reviews if available
   const productReviews = Array.isArray(product.reviews) ? product.reviews : reviews;
+  const imagesList = product.images && product.images.length > 0 ? product.images : [product.image];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -21,8 +26,23 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
           <X className="w-6 h-6" />
         </button>
         
-        <div className="w-full md:w-1/2 lg:w-2/5 aspect-square md:aspect-auto relative bg-[#FCE8ED]">
-          <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
+        <div className="w-full md:w-1/2 lg:w-2/5 aspect-square md:aspect-auto relative bg-[#FCE8ED] flex flex-col">
+          <div className="flex-1 relative overflow-hidden bg-white">
+            <img src={imagesList[currentImageIdx]} alt={product.name} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300" />
+          </div>
+          {imagesList.length > 1 && (
+            <div className="flex gap-2 p-4 overflow-x-auto bg-[#FCE8ED] custom-scrollbar shrink-0 h-24">
+              {imagesList.map((img, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setCurrentImageIdx(idx)}
+                  className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-colors ${currentImageIdx === idx ? 'border-[#4A2C2C]' : 'border-transparent hover:border-[#4A2C2C]/50'}`}
+                >
+                  <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover absolute inset-0" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="w-full md:w-1/2 lg:w-3/5 p-6 md:p-10 flex flex-col h-[80vh] md:h-[85vh]">
@@ -50,9 +70,10 @@ export const ProductModal = ({ product, onClose, onAddToCart, isWishlisted, onTo
               <h4 className="text-lg font-bold text-[#4A2C2C] mb-3 flex items-center gap-2">
                  <Sparkles className="w-5 h-5 text-[#F4B5C6]" /> Mô Tả Chi Tiết
               </h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {product.description || "Đang cập nhật mô tả cho sản phẩm này. Xin vui lòng quay lại sau."}
-              </p>
+              <div 
+                className="prose prose-sm max-w-none text-gray-600 leading-relaxed prose-headings:text-[#4A2C2C] prose-a:text-[#F4B5C6] prose-img:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description || "Đang cập nhật mô tả cho sản phẩm này. Xin vui lòng quay lại sau.") }}
+              />
             </div>
             
             <div>

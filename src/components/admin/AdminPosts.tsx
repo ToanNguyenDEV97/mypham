@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../../lib/firebase';
+import React, { useState, useEffect, useRef } from 'react';
+import { db, storage } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Post } from '../../types';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
 import { blogPosts as mockPosts } from '../../data/mockData';
+import { RichTextEditor } from '../ui/RichTextEditor';
 
 export const AdminPosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -73,6 +77,7 @@ export const AdminPosts = () => {
       image: post.image || '',
       content: post.content || ''
     });
+    setUploadProgress(null);
     setIsModalOpen(true);
   };
 
@@ -84,7 +89,46 @@ export const AdminPosts = () => {
       image: '',
       content: ''
     });
+    setUploadProgress(null);
     setIsModalOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Kích thước file vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn.");
+      return;
+    }
+    
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert("Chỉ hỗ trợ định dạng JPG, PNG hoặc WebP.");
+      return;
+    }
+
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `posts/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Lỗi upload ảnh:", error);
+        alert("Upload ảnh thất bại. Vui lòng thử lại.");
+        setUploadProgress(null);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        setFormData(prev => ({ ...prev, image: downloadURL }));
+        setUploadProgress(null);
+      }
+    );
   };
 
   const displayPosts = posts.length > 0 ? posts : mockPosts;
@@ -189,24 +233,46 @@ export const AdminPosts = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL Hình ảnh đại diện</label>
-                  <input 
-                    type="url" 
-                    value={formData.image}
-                    onChange={e => setFormData({...formData, image: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none"
-                    placeholder="https://..."
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh đại diện</label>
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center relative bg-gray-50 hover:bg-gray-100 transition-colors">
+                    {formData.image ? (
+                      <div className="relative w-full h-32 group">
+                        <img src={formData.image} alt="Preview" className="w-full h-full object-contain rounded-lg" />
+                        <button 
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); setFormData({...formData, image: ''}); }}
+                          className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                        <span className="text-sm text-gray-500">Tải ảnh lên (Max 2MB)</span>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/webp"
+                      onChange={handleImageUpload}
+                      ref={fileInputRef}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploadProgress !== null}
+                    />
+                    {uploadProgress !== null && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <div className="text-[#F4B5C6] font-medium">{Math.round(uploadProgress)}%</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung</label>
-                <textarea 
-                  rows={6}
-                  value={formData.content}
-                  onChange={e => setFormData({...formData, content: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#F4B5C6] focus:border-[#F4B5C6] outline-none resize-none"
-                  placeholder="Viết nội dung tại đây..."
+                <RichTextEditor 
+                  content={formData.content}
+                  onChange={content => setFormData({...formData, content})}
                 />
               </div>
               <div className="pt-4 flex justify-end gap-3">
