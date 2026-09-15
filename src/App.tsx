@@ -22,6 +22,7 @@ import { AuthModal } from './components/ui/AuthModal';
 import { ProfileView } from './components/views/ProfileView';
 import { OrderTrackingView } from './components/views/OrderTrackingView';
 import { BlogView } from './components/views/BlogView';
+import { PolicyView } from './components/views/PolicyView';
 import { PostDetailView } from './components/views/PostDetailView';
 import { auth, db } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -32,6 +33,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentView, setCurrentView] = useState<import('./types').ViewType>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPolicySlug, setSelectedPolicySlug] = useState<string | null>(null);
   const [productsKey, setProductsKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -46,7 +48,8 @@ export default function App() {
     currentView, setCurrentView,
     searchQuery, setSearchQuery,
     selectedProduct, setSelectedProduct,
-    selectedPost, setSelectedPost
+    selectedPost, setSelectedPost,
+    selectedPolicySlug, setSelectedPolicySlug
   );
 
 
@@ -241,6 +244,8 @@ export default function App() {
             <BlogView onPostClick={(post) => { setSelectedPost(post); setCurrentView('post_detail'); }} onBack={() => setCurrentView('home')} />
           ) : currentView === 'post_detail' && selectedPost ? (
             <PostDetailView post={selectedPost} onBack={() => setCurrentView('blog')} />
+          ) : currentView === 'policy_page' && selectedPolicySlug ? (
+            <PolicyView slug={selectedPolicySlug} onBack={() => setCurrentView('home')} />
           ) : (
             <ProductsView key={`products_${productsKey}`} 
               onProductClick={handleProductClick} 
@@ -262,6 +267,7 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         setProductsKey={setProductsKey}
         setIsMenuOpen={setIsMenuOpen}
+        setSelectedPolicySlug={setSelectedPolicySlug}
       />
 
       {isMenuOpen && (

@@ -1,17 +1,70 @@
 const fs = require('fs');
+let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-let appTsx = fs.readFileSync('src/App.tsx', 'utf8');
+// Add import
+if (!code.includes("PolicyView")) {
+  code = code.replace(
+    "import { BlogView } from './components/views/BlogView';",
+    "import { BlogView } from './components/views/BlogView';\nimport { PolicyView } from './components/views/PolicyView';"
+  );
+}
 
-const headerRegex = /\{\/\* Top Bar \*\/\}([\s\S]*?)\{\/\* Main Content \*\/\}/;
-appTsx = appTsx.replace(headerRegex, `<Header \n        settings={settings}\n        searchQuery={searchQuery}\n        setSearchQuery={setSearchQuery}\n        setCurrentView={setCurrentView}\n        setIsCartOpen={setIsCartOpen}\n        cartItemsCount={cartItemsCount}\n        setIsWishlistOpen={setIsWishlistOpen}\n        wishlistCount={wishlist.length}\n        user={user}\n        setIsAuthModalOpen={setIsAuthModalOpen}\n        setIsMenuOpen={setIsMenuOpen}\n      />\n      {/* Main Content */}`);
+// Add state
+const targetState = `  const [selectedPost, setSelectedPost] = useState<Post | null>(null);`;
+const replaceState = `  const [selectedPost, setSelectedPost] = useState<Post | null>(null);\n  const [selectedPolicySlug, setSelectedPolicySlug] = useState<string | null>(null);`;
+if (!code.includes("selectedPolicySlug")) {
+  code = code.replace(targetState, replaceState);
+}
 
-const footerRegex = /<footer className="bg-\[\#FDF2F5\] pt-16 pb-8 border-t border-\[\#FCE8ED\] mt-auto">([\s\S]*?)<\/footer>/;
-appTsx = appTsx.replace(footerRegex, `<Footer \n        settings={settings}\n        setCurrentView={setCurrentView}\n        setSearchQuery={setSearchQuery}\n        setProductsKey={setProductsKey}\n        setIsMenuOpen={setIsMenuOpen}\n      />`);
+// Update useUrlSync call
+const targetUrl = `  useUrlSync(
+    currentView, setCurrentView,
+    searchQuery, setSearchQuery,
+    selectedProduct, setSelectedProduct,
+    selectedPost, setSelectedPost
+  );`;
+const replaceUrl = `  useUrlSync(
+    currentView, setCurrentView,
+    searchQuery, setSearchQuery,
+    selectedProduct, setSelectedProduct,
+    selectedPost, setSelectedPost,
+    selectedPolicySlug, setSelectedPolicySlug
+  );`;
+if (code.includes(targetUrl)) {
+  code = code.replace(targetUrl, replaceUrl);
+}
 
-const mobileMenuRegex = /\{\/\* Mobile Menu Overlay \*\/\}\s*\{isMenuOpen && \([\s\S]*?\}\s*\{\/\* Floating Contact Buttons \*\/\}/;
-appTsx = appTsx.replace(mobileMenuRegex, `{isMenuOpen && (\n        <MobileMenu \n          settings={settings}\n          setCurrentView={setCurrentView}\n          setSearchQuery={setSearchQuery}\n          setProductsKey={setProductsKey}\n          setIsMenuOpen={setIsMenuOpen}\n        />\n      )}\n\n      {/* Floating Contact Buttons */}`);
+// Add PolicyView to render
+const targetRender = `          ) : currentView === 'post_detail' && selectedPost ? (
+            <PostDetailView post={selectedPost} onBack={() => setCurrentView('blog')} />
+          ) : (`;
+const replaceRender = `          ) : currentView === 'post_detail' && selectedPost ? (
+            <PostDetailView post={selectedPost} onBack={() => setCurrentView('blog')} />
+          ) : currentView === 'policy_page' && selectedPolicySlug ? (
+            <PolicyView slug={selectedPolicySlug} onBack={() => setCurrentView('home')} />
+          ) : (`;
+if (code.includes(targetRender)) {
+  code = code.replace(targetRender, replaceRender);
+}
 
-// Add imports
-appTsx = appTsx.replace("import { CartDrawer } from './components/layout/CartDrawer';", "import { CartDrawer } from './components/layout/CartDrawer';\nimport { Header } from './components/layout/Header';\nimport { Footer } from './components/layout/Footer';\nimport { MobileMenu } from './components/layout/MobileMenu';");
+// Add selectedPolicySlug to Footer
+const targetFooter = `      <Footer 
+        settings={settings}
+        setCurrentView={setCurrentView}
+        setSearchQuery={setSearchQuery}
+        setProductsKey={setProductsKey}
+        setIsMenuOpen={setIsMenuOpen}
+      />`;
+const replaceFooter = `      <Footer 
+        settings={settings}
+        setCurrentView={setCurrentView}
+        setSearchQuery={setSearchQuery}
+        setProductsKey={setProductsKey}
+        setIsMenuOpen={setIsMenuOpen}
+        setSelectedPolicySlug={setSelectedPolicySlug}
+      />`;
+if (code.includes(targetFooter)) {
+  code = code.replace(targetFooter, replaceFooter);
+}
 
-fs.writeFileSync('src/App.tsx', appTsx);
+fs.writeFileSync('src/App.tsx', code);

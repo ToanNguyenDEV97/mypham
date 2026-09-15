@@ -1,4 +1,4 @@
-export type ViewType = "home" | "products" | "checkout" | "product_detail" | "admin" | "profile" | "order_tracking" | "blog" | "post_detail";
+export type ViewType = "home" | "products" | "checkout" | "product_detail" | "admin" | "profile" | "order_tracking" | "blog" | "post_detail" | "policy_page";
 export type TimestampType = Date | string | number | { toDate?: () => Date, seconds?: number, nanoseconds?: number };
 
 export interface Product {
@@ -136,4 +136,13 @@ export interface Settings {
   bankId?: string;
   categories?: string[];
   brands?: string[];
+}
+
+
+export interface Policy {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  updatedAt: any;
 }

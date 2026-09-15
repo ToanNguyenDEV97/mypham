@@ -11,7 +11,9 @@ export const useUrlSync = (
   selectedProduct: Product | null,
   setSelectedProduct: (p: Product | null) => void,
   selectedPost: Post | null,
-  setSelectedPost: (p: Post | null) => void
+  setSelectedPost: (p: Post | null) => void,
+  selectedPolicySlug: string | null,
+  setSelectedPolicySlug: (s: string | null) => void
 ) => {
   const isInitialLoad = useRef(true);
 
@@ -45,12 +47,18 @@ export const useUrlSync = (
       params.delete('postId');
     }
     
+    if (currentView === 'policy_page' && selectedPolicySlug) {
+      params.set('policy', selectedPolicySlug);
+    } else {
+      params.delete('policy');
+    }
+    
     const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
     
     if (window.location.search !== (params.toString() ? '?' + params.toString() : '')) {
       window.history.pushState({}, '', newUrl);
     }
-  }, [currentView, searchQuery, selectedProduct, selectedPost]);
+  }, [currentView, searchQuery, selectedProduct, selectedPost, selectedPolicySlug]);
 
   // Handle popstate (back/forward)
   useEffect(() => {
@@ -60,6 +68,7 @@ export const useUrlSync = (
       const q = params.get('q') || '';
       const id = params.get('id');
       const postId = params.get('postId');
+      const policy = params.get('policy');
       
       setCurrentView(view as ViewType);
       setSearchQuery(q);
@@ -74,6 +83,10 @@ export const useUrlSync = (
         } catch (error) {
           console.error('Error fetching product from URL:', error);
         }
+      }
+      
+      if (view === 'policy_page' && policy) {
+        setSelectedPolicySlug(policy);
       }
       
       if (view === 'post_detail' && postId) {
@@ -96,5 +109,5 @@ export const useUrlSync = (
     isInitialLoad.current = false;
     
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [setCurrentView, setSearchQuery, setSelectedProduct, setSelectedPost]);
+  }, [setCurrentView, setSearchQuery, setSelectedProduct, setSelectedPost, setSelectedPolicySlug]);
 };

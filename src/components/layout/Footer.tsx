@@ -7,10 +7,11 @@ interface FooterProps {
   setSearchQuery: (q: string) => void;
   setProductsKey: (cb: (k: number) => number) => void;
   setIsMenuOpen: (open: boolean) => void;
+  setSelectedPolicySlug?: (slug: string) => void;
 }
 
 export const Footer = ({
-  settings, setCurrentView, setSearchQuery, setProductsKey, setIsMenuOpen
+  settings, setCurrentView, setSearchQuery, setProductsKey, setIsMenuOpen, setSelectedPolicySlug
 }: FooterProps) => {
   return (
     <footer className="bg-white pt-16 pb-8 px-4 md:px-8 border-t border-gray-100">
@@ -49,11 +50,11 @@ export const Footer = ({
           <div>
             <h4 className="font-bold text-[#4A2C2C] mb-6 uppercase text-sm">Chính sách</h4>
             <ul className="space-y-4 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-[#F4B5C6] transition-colors">Chính sách bảo mật</a></li>
-              <li><a href="#" className="hover:text-[#F4B5C6] transition-colors">Chính sách vận chuyển</a></li>
-              <li><a href="#" className="hover:text-[#F4B5C6] transition-colors">Chính sách đổi trả</a></li>
-              <li><a href="#" className="hover:text-[#F4B5C6] transition-colors">Điều khoản dịch vụ</a></li>
-              <li><a href="#" className="hover:text-[#F4B5C6] transition-colors">Hình thức thanh toán</a></li>
+              <li><button onClick={(e) => { e.preventDefault(); if (setSelectedPolicySlug) setSelectedPolicySlug('chinh-sach-bao-mat'); setCurrentView('policy_page'); window.scrollTo(0,0); }} className="hover:text-[#F4B5C6] transition-colors">Chính sách bảo mật</button></li>
+              <li><button onClick={(e) => { e.preventDefault(); if (setSelectedPolicySlug) setSelectedPolicySlug('chinh-sach-van-chuyen'); setCurrentView('policy_page'); window.scrollTo(0,0); }} className="hover:text-[#F4B5C6] transition-colors">Chính sách vận chuyển</button></li>
+              <li><button onClick={(e) => { e.preventDefault(); if (setSelectedPolicySlug) setSelectedPolicySlug('chinh-sach-doi-tra'); setCurrentView('policy_page'); window.scrollTo(0,0); }} className="hover:text-[#F4B5C6] transition-colors">Chính sách đổi trả</button></li>
+              <li><button onClick={(e) => { e.preventDefault(); if (setSelectedPolicySlug) setSelectedPolicySlug('dieu-khoan-dich-vu'); setCurrentView('policy_page'); window.scrollTo(0,0); }} className="hover:text-[#F4B5C6] transition-colors">Điều khoản dịch vụ</button></li>
+              <li><button onClick={(e) => { e.preventDefault(); if (setSelectedPolicySlug) setSelectedPolicySlug('hinh-thuc-thanh-toan'); setCurrentView('policy_page'); window.scrollTo(0,0); }} className="hover:text-[#F4B5C6] transition-colors">Hình thức thanh toán</button></li>
             </ul>
           </div>
 

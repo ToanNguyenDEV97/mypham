@@ -1,7 +1,7 @@
 import { Product, Banner, Post } from '../../types';
 import { ArrowRight, Sparkles, Star, ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, Truck, CreditCard, Headphones, ShieldCheck, Instagram } from 'lucide-react';
 import { ProductCard } from '../ui/ProductCard';
-import { products, bodyCareProducts, reviews, blogPosts, instagramPosts } from '../../data/mockData';
+import { products as mockProducts, bodyCareProducts, reviews, blogPosts, instagramPosts } from '../../data/mockData';
 import { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
@@ -22,6 +22,7 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
   const [recentPosts, setRecentPosts] = useState<Post[]>(blogPosts);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isUsingMockData, setIsUsingMockData] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,19 +32,20 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
           getDocs(collection(db, 'banners'))
         ]);
         
-        const fetchedProducts = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const combinedMap = new Map();
-        products.forEach(p => combinedMap.set(String(p.id), p));
-        fetchedProducts.forEach(p => combinedMap.set(String(p.id), p));
-        setHomeProducts(Array.from(combinedMap.values()).slice(0, 4));
+        const fetchedProducts = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+        if (fetchedProducts.length === 0) {
+          setHomeProducts([...mockProducts, ...bodyCareProducts].slice(0, 8));
+          setIsUsingMockData(true);
+        } else {
+          setHomeProducts(fetchedProducts.slice(0, 8));
+        }
 
         const fetchedBanners = bannersSnap.docs
           .map(doc => ({ id: doc.id, ...doc.data() } as Banner))
           .filter(b => b.isActive !== false);
         setBanners(fetchedBanners);
       } catch (error) {
-        console.error('Error fetching home data', error);
-        setHomeProducts(products.slice(0, 4));
+        console.error('Error fetching home data:', error);
       } finally {
         setLoading(false);
       }

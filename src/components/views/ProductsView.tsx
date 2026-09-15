@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { ProductCard } from '../ui/ProductCard';
-import { products, bodyCareProducts } from '../../data/mockData';
+import { products as mockProducts, bodyCareProducts } from '../../data/mockData';
 import { parsePrice } from '../../utils/format';
 import { useEffect } from 'react';
 import { db } from '../../lib/firebase';
@@ -9,23 +9,29 @@ import { collection, getDocs } from 'firebase/firestore';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { Product, Settings } from '../../types';
 import { SEO } from '../ui/SEO';
+import { Pagination } from '../ui/Pagination';
 
 export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWishlist, searchQuery = '', settings, onClearSearch }: { onProductClick: (product: Product) => void; onAddToCart: (product: Product) => void; wishlist: Product[]; onToggleWishlist: (product: Product) => void; searchQuery?: string; settings?: Settings; onClearSearch?: () => void; key?: string; }) => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUsingMockData, setIsUsingMockData] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'products'));
-        const fetchedProducts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const combinedMap = new Map();
-        [...products, ...bodyCareProducts].forEach(p => combinedMap.set(String(p.id), p));
-        fetchedProducts.forEach(p => combinedMap.set(String(p.id), p));
-        setAllProducts(Array.from(combinedMap.values()));
+        const fetchedProducts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+        if (fetchedProducts.length === 0) {
+          setAllProducts([...mockProducts, ...bodyCareProducts]);
+          setIsUsingMockData(true);
+        } else {
+          setAllProducts(fetchedProducts);
+          setIsUsingMockData(false);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
-        setAllProducts([...products, ...bodyCareProducts]);
+        setError('Không tải được sản phẩm, vui lòng thử lại');
       } finally {
         setLoading(false);
       }
@@ -61,6 +67,20 @@ export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWi
 
   const [sortOrder, setSortOrder] = useState('default');
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCat, priceFilters, brandFilters, sortOrder, searchQuery]);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
 
   const togglePriceFilter = (range: string) => {
     setPriceFilters(prev => 
@@ -194,6 +214,12 @@ export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWi
     ? 'Khám phá các ưu đãi và khuyến mãi hấp dẫn nhất từ DS Tiên Cosmetics. Đừng bỏ lỡ cơ hội sở hữu sản phẩm làm đẹp với giá tốt nhất.' 
     : 'Khám phá bộ sưu tập các sản phẩm làm đẹp an toàn, tự nhiên và hiệu quả. Chọn lựa sản phẩm phù hợp với làn da của bạn.';
 
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
+  const paginatedProducts = filteredAndSortedProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <>
       <SEO title={`${isPromo ? 'Khuyến Mãi' : 'Sản Phẩm'} - DS Tiên Cosmetics`} />
@@ -273,7 +299,7 @@ export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWi
 
           {filteredAndSortedProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {filteredAndSortedProducts.map(product => (
+              {paginatedProducts.map(product => (
                 <ProductCard 
                   key={product.id} 
                   product={product} 
@@ -301,14 +327,13 @@ export const ProductsView = ({ onProductClick, onAddToCart, wishlist, onToggleWi
             </div>
           )}
           
-          {filteredAndSortedProducts.length > 0 && (
+          {totalPages > 1 && (
             <div className="mt-12 flex justify-center">
-               <div className="flex gap-2">
-                 <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#F4B5C6] hover:text-[#F4B5C6] transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-                 <button className="w-10 h-10 rounded-full bg-[#F4B5C6] text-white flex items-center justify-center font-bold shadow-md">1</button>
-                 <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#F4B5C6] hover:text-[#F4B5C6] transition-colors font-bold text-gray-600">2</button>
-                 <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#F4B5C6] hover:text-[#F4B5C6] transition-colors"><ChevronRight className="w-5 h-5" /></button>
-               </div>
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
             </div>
           )}
         </div>
