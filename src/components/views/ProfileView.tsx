@@ -4,7 +4,7 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs, orderBy } from 
 import { MapPin, User, LogOut, Package, ShieldCheck, Clock, CheckCircle2, Truck, XCircle, Search } from 'lucide-react';
 import { Order, CartItem} from '../../types';
 import { SEO } from '../ui/SEO';
-import { formatPrice } from '../../utils/format';
+import { formatPrice, parseDate } from '../../utils/format';
 
 export const ProfileView = ({ onLogout, onAdminClick }: { onLogout: () => void; onAdminClick?: () => void }) => {
   const [loading, setLoading] = useState(true);
@@ -65,7 +65,7 @@ export const ProfileView = ({ onLogout, onAdminClick }: { onLogout: () => void; 
             orderBy('createdAt', 'desc')
           );
           const querySnapshot = await getDocs(q);
-          const fetchedOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const fetchedOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Order[];
           setOrders(fetchedOrders);
         } catch (error) {
           console.error("Error fetching orders:", error);
@@ -230,7 +230,7 @@ export const ProfileView = ({ onLogout, onAdminClick }: { onLogout: () => void; 
                           <div>
                             <p className="font-mono font-bold text-[#4A2C2C]">#{order.id}</p>
                             <p className="text-sm text-gray-500 mt-1">
-                              {order.createdAt?.toDate ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(order.createdAt.toDate()) : ''}
+                              {order.createdAt ? parseDate(order.createdAt).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }) : ''}
                             </p>
                           </div>
                           <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.color} shrink-0 w-fit`}>

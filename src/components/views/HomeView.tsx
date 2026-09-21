@@ -4,10 +4,11 @@ import { ProductCard } from '../ui/ProductCard';
 import { products as mockProducts, bodyCareProducts, reviews, blogPosts, instagramPosts } from '../../data/mockData';
 import { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { collection, getDocs, limit, query, orderBy } from 'firebase/firestore';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { SEO } from '../ui/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatDateStr } from '../../utils/format';
 
 export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishlist, onNavigateToBlog, onPostClick }: {
   setSelectedProduct: (p: Product) => void;
@@ -18,8 +19,9 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
   onPostClick: (p: Post) => void;
 }) => {
   const [homeProducts, setHomeProducts] = useState<Product[]>([]);
+  const [bodyCareItems, setBodyCareItems] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [recentPosts, setRecentPosts] = useState<Post[]>(blogPosts);
+  const [recentPosts, setRecentPosts] = useState<Post[]>(blogPosts as any);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
@@ -27,23 +29,34 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsSnap, bannersSnap] = await Promise.all([
+        const [productsSnap, bannersSnap, postsSnap] = await Promise.all([
           getDocs(collection(db, 'products')),
-          getDocs(collection(db, 'banners'))
+          getDocs(collection(db, 'banners')),
+          getDocs(query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(3)))
         ]);
         
         const fetchedProducts = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
         if (fetchedProducts.length === 0) {
           setHomeProducts([...mockProducts, ...bodyCareProducts].slice(0, 8));
+          setBodyCareItems(bodyCareProducts.slice(0, 4));
           setIsUsingMockData(true);
         } else {
           setHomeProducts(fetchedProducts.slice(0, 8));
+          const bodyCare = fetchedProducts.filter((p: any) => p.category === 'Chăm sóc cơ thể');
+          setBodyCareItems(bodyCare.length > 0 ? bodyCare.slice(0, 4) : bodyCareProducts.slice(0, 4) as any);
         }
 
         const fetchedBanners = bannersSnap.docs
           .map(doc => ({ id: doc.id, ...doc.data() } as Banner))
           .filter(b => b.isActive !== false);
         setBanners(fetchedBanners);
+
+        const fetchedPosts = postsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        if (fetchedPosts.length > 0) {
+          setRecentPosts(fetchedPosts);
+        } else {
+          setRecentPosts(blogPosts as any);
+        }
       } catch (error) {
         console.error('Error fetching home data:', error);
       } finally {
@@ -233,17 +246,9 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#4A2C2C] flex items-center gap-2">
               Chăm Sóc Cơ Thể <ArrowRight className="w-6 h-6 text-[#F4B5C6] hidden md:block" />
             </h2>
-            <div className="flex gap-2">
-              <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#F4B5C6] hover:text-[#F4B5C6] transition-colors">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#F4B5C6] hover:text-[#F4B5C6] transition-colors">
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {bodyCareProducts.map(product => (
+            {bodyCareItems.map(product => (
               <ProductCard 
                 key={product.id} 
                 product={product} 
@@ -357,18 +362,9 @@ export const HomeView = ({ setSelectedProduct, addToCart, wishlist, toggleWishli
                     {post.category}
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 mb-2">{
-  (() => {
-    const d = post.createdAt || post.date;
-    if (!d) return 'Đang cập nhật';
-    if (typeof d === 'string') {
-      const parsed = new Date(d);
-      return !isNaN(parsed.getTime()) ? parsed.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : d;
-    }
-    if (d.toDate) return d.toDate().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return 'Đang cập nhật';
-  })()
-}</div>
+                <div className="text-xs text-gray-400 mb-2">
+                  {formatDateStr(post.createdAt || (post as any).date)}
+                </div>
                 <h3 className="font-bold text-[#4A2C2C] group-hover:text-[#F4B5C6] transition-colors leading-relaxed line-clamp-2">{post.title}</h3>
               </div>
             ))}

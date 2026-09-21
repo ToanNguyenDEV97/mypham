@@ -12,10 +12,12 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin'])) || isAdmin();
       allow delete: if isAdmin();
     }
+
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
+
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -43,11 +45,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
     match /vouchers/{voucherId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-  }
 
     match /policies/{policyId} {
       allow read: if true;

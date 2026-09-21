@@ -2,7 +2,7 @@ const test = require('firebase-functions-test')();
 const admin = require('firebase-admin');
 
 // Khởi tạo mock cho Firestore
-const mockGet = jest.fn();
+const mockGet = jest.fn().mockResolvedValue({ exists: false, data: () => ({}) });
 const mockSet = jest.fn();
 const mockUpdate = jest.fn();
 const mockCommit = jest.fn().mockResolvedValue(true);
@@ -38,6 +38,19 @@ jest.mock('firebase-admin', () => {
         increment: jest.fn((val) => `mock-increment(${val})`)
       }
     })
+  };
+});
+
+jest.mock('firebase-admin/firestore', () => {
+  return {
+    getFirestore: jest.fn(() => ({
+      collection: mockCollection,
+      batch: mockBatch,
+    })),
+    FieldValue: {
+      serverTimestamp: jest.fn(() => 'mock-timestamp'),
+      increment: jest.fn((val) => `mock-increment(${val})`)
+    }
   };
 });
 

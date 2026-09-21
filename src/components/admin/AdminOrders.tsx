@@ -363,7 +363,7 @@ export const AdminOrders = () => {
     try {
       const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const ords = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const ords = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Order[];
       setOrders(ords);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -391,7 +391,7 @@ export const AdminOrders = () => {
       
       // Update selectedOrder if modal is open
       if (selectedOrder && selectedOrder.id === id) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
+        setSelectedOrder({ ...selectedOrder, status: newStatus as Order['status'] });
       }
     } catch (error) {
       console.error("Error updating order:", error);

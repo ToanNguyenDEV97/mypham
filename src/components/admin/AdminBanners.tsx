@@ -24,7 +24,7 @@ export const AdminBanners = () => {
   const fetchBanners = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'banners'));
-      const fetched = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetched = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Banner[];
       // sort by created at or just keep it
       setBanners(fetched);
     } catch (error) {

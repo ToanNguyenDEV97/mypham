@@ -1,8 +1,10 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
+
 admin.initializeApp();
 
-const db = admin.firestore();
+const db = getFirestore(process.env.FIRESTORE_DATABASE_ID || 'ai-studio-copyofuntitled-bf3ae93c-e854-4d3d-85e6-d9f64163c711');
 
 const parsePrice = (priceStr) => {
   if (!priceStr) return 0;
@@ -131,7 +133,7 @@ exports.createOrder = functions.https.onCall(async (data, context) => {
     let orderSnap = await db.collection('orders').doc(newOrderId).get();
     
     // Kiểm tra để đảm bảo không bị trùng lặp orderId
-    while (orderSnap.exists) {
+    while (orderSnap && orderSnap.exists) {
       newOrderId = generateOrderId();
       orderSnap = await db.collection('orders').doc(newOrderId).get();
     }

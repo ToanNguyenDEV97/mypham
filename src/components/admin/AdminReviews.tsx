@@ -17,7 +17,7 @@ export const AdminReviews = () => {
     try {
       const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Review[];
       setReviews(fetchedReviews);
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -26,10 +26,10 @@ export const AdminReviews = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) {
       try {
-        await deleteDoc(doc(db, 'reviews', id));
+        await deleteDoc(doc(db, 'reviews', String(id)));
         setReviews(reviews.filter(r => r.id !== id));
       } catch (error) {
         console.error("Error deleting review:", error);
@@ -90,7 +90,7 @@ export const AdminReviews = () => {
                       <div className="font-medium text-gray-900">{review.name || 'Khách hàng'}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="text-sm text-gray-600 max-w-[150px] truncate" title={review.productId}>
+                      <div className="text-sm text-gray-600 max-w-[150px] truncate" title={String(review.productId)}>
                         {review.productId}
                       </div>
                     </td>

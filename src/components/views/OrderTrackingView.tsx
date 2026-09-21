@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Search, Package, Clock, Truck, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react';
 import { Order, CartItem } from '../../types';
 import { SEO } from '../ui/SEO';
-import { formatPrice, parsePrice } from '../../utils/format';
+import { formatPrice, parsePrice, parseDate } from '../../utils/format';
 
 export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
   const [orderId, setOrderId] = useState('');
@@ -26,7 +26,7 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
       const result = await trackOrderFunction({ orderId: orderId.trim() });
       
       if (result.data) {
-        setOrder(result.data);
+        setOrder(result.data as Order);
       }
     } catch (err: unknown) {
       console.error(err);
@@ -98,7 +98,7 @@ export const OrderTrackingView = ({ onBack }: { onBack: () => void }) => {
                 <p className="text-sm text-gray-500 mb-1">Mã đơn hàng</p>
                 <p className="font-mono font-bold text-[#4A2C2C] text-lg">#{order.id}</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  Đặt ngày: {order.createdAt?.toDate ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(order.createdAt.toDate()) : 'Không xác định'}
+                  Đặt ngày: {order.createdAt ? parseDate(order.createdAt).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Không xác định'}
                 </p>
               </div>
               

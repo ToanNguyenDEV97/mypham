@@ -24,7 +24,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
       try {
         const q = query(collection(db, 'reviews'), where('productId', '==', product.id), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
-        const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedReviews = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Review[];
         setDbReviews(fetchedReviews);
       } catch (error) {
         console.error('Error fetching reviews:', error);
@@ -54,7 +54,7 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
         createdAt: serverTimestamp()
       };
       const docRef = await addDoc(collection(db, 'reviews'), reviewData);
-      setDbReviews([{ id: docRef.id, ...reviewData, createdAt: new Date() }, ...dbReviews]);
+      setDbReviews([{ id: docRef.id, ...reviewData, createdAt: new Date() } as unknown as Review, ...dbReviews]);
       setNewReviewText('');
       setNewReviewRating(5);
     } catch (error) {
@@ -64,7 +64,9 @@ export const ProductDetailView = ({ product, onBack, onAddToCart, wishlist, onTo
     }
   };
 
-  const displayReviews = dbReviews.length > 0 ? dbReviews : (product.reviews || mockReviews);
+  const displayReviews: Review[] = dbReviews.length > 0 
+    ? dbReviews 
+    : (Array.isArray(product.reviews) ? product.reviews : (mockReviews as unknown as Review[]));
   const averageRating = displayReviews.length > 0 
     ? Math.round(displayReviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / displayReviews.length) 
     : product.rating || 5;

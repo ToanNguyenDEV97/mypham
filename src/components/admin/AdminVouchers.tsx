@@ -3,7 +3,7 @@ import { db } from '../../lib/firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { Voucher } from '../../types';
 import { Plus, Edit2, Trash2, X, Tag } from 'lucide-react';
-import { formatPrice } from '../../utils/format';
+import { formatPrice, formatDateStr, parseDate } from '../../utils/format';
 
 export const AdminVouchers = () => {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
@@ -29,7 +29,7 @@ export const AdminVouchers = () => {
     setLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, 'vouchers'));
-      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Voucher[];
       setVouchers(data);
     } catch (error) {
       console.error("Error fetching vouchers:", error);
@@ -47,7 +47,7 @@ export const AdminVouchers = () => {
         discountValue: voucher.discountValue || 0,
         minOrderValue: voucher.minOrderValue || 0,
         isActive: voucher.isActive !== undefined ? voucher.isActive : true,
-        expiresAt: voucher.expiresAt || '',
+        expiresAt: voucher.expiresAt ? parseDate(voucher.expiresAt).toISOString().split('T')[0] : '',
         usageLimit: voucher.usageLimit || 0
       });
     } else {
@@ -148,7 +148,7 @@ export const AdminVouchers = () => {
                       {formatPrice(voucher.minOrderValue)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {voucher.expiresAt ? new Date(voucher.expiresAt).toLocaleDateString('vi-VN') : 'Không có hạn'}
+                      {voucher.expiresAt ? formatDateStr(voucher.expiresAt) : 'Không có hạn'}
                     </td>
                     <td className="px-6 py-4 text-sm text-center text-gray-600">
                       {voucher.usedCount || 0} {voucher.usageLimit ? `/ ${voucher.usageLimit}` : ''}

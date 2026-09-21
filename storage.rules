@@ -2,7 +2,10 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     function isAdmin() {
-      return request.auth != null && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return request.auth != null && (
+        firestore.get(/databases/ai-studio-copyofuntitled-bf3ae93c-e854-4d3d-85e6-d9f64163c711/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
     }
     
     match /{allPaths=**} {

@@ -21,7 +21,7 @@ export const AdminProducts = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const itemsPerPage = 8;
   
-  const [settings, setSettings] = useState<Product | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,7 +57,7 @@ export const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'products'));
-      const prods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const prods = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Product[];
       // If empty, let's just use mock data for display for now, or just show empty
       setProducts(prods);
     } catch (error) {
@@ -96,7 +96,7 @@ export const AdminProducts = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
       try {
         await deleteDoc(doc(db, 'products', String(id)));
@@ -114,13 +114,13 @@ export const AdminProducts = () => {
       name: product.name || '',
       description: product.description || '',
       ingredients: product.ingredients || '',
-      price: product.newPrice || '',
-      discount: product.discount || '',
+      price: product.newPrice ? String(product.newPrice) : '',
+      discount: product.discount ? String(product.discount) : '',
       category: product.category || '',
       brand: product.brand || product.details?.brand || '',
       image: product.image || '',
       images: productImages,
-      stock: product.stock || '100',
+      stock: product.stock !== undefined ? String(product.stock) : '100',
       origin: product.details?.origin || '',
       volume: product.details?.volume || '',
       skinType: product.details?.skinType || ''
@@ -201,7 +201,7 @@ export const AdminProducts = () => {
   };
 
   const isUsingMockData = !loading && products.length === 0;
-  const displayProducts = isUsingMockData ? [...mockProducts, ...bodyCareProducts] : products;
+  const displayProducts: Product[] = isUsingMockData ? ([...mockProducts, ...bodyCareProducts] as unknown as Product[]) : products;
 
   const filteredProducts = displayProducts.filter(product => {
     // Search Filter
@@ -217,7 +217,7 @@ export const AdminProducts = () => {
     
     // Stock Filter
     if (stockFilter !== 'all') {
-      const stock = parseInt(product.stock) || 0;
+      const stock = typeof product.stock === 'number' ? product.stock : parseInt(String(product.stock || '0')) || 0;
       if (stockFilter === 'in_stock' && stock <= 0) return false;
       if (stockFilter === 'out_of_stock' && stock > 0) return false;
       if (stockFilter === 'low_stock' && (stock > 10 || stock <= 0)) return false;

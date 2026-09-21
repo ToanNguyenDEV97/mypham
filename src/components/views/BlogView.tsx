@@ -18,15 +18,15 @@ export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: Post) =>
       try {
         const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
-        const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Post[];
         if (fetchedPosts.length > 0) {
           setPosts(fetchedPosts);
         } else {
-          setPosts(mockPosts); // Fallback
+          setPosts(mockPosts as unknown as Post[]); // Fallback
         }
       } catch (error) {
         console.error("Error fetching posts:", error);
-        setPosts(mockPosts);
+        setPosts(mockPosts as unknown as Post[]);
       } finally {
         setLoading(false);
       }
@@ -43,7 +43,7 @@ export const BlogView = ({ onPostClick, onBack }: { onPostClick: (post: Post) =>
     return matchCategory && matchSearch;
   });
 
-  const formatDate = (dateInput: import('../../types').TimestampType) => {
+  const formatDate = (dateInput: import('../../types').TimestampType | any) => {
     if (!dateInput) return 'Đang cập nhật';
     if (typeof dateInput === 'string') {
       // Check if it's ISO string or just text

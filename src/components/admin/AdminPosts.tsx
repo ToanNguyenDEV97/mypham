@@ -29,7 +29,7 @@ export const AdminPosts = () => {
   const fetchPosts = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'posts'));
-      const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Post[];
       setPosts(fetchedPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);

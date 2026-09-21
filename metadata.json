@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Untitled",
-  "description": "",
+  "name": "DS Tiên Cosmetics",
+  "description": "Cửa hàng mỹ phẩm và chăm sóc da, cơ thể chính hãng DS Tiên",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

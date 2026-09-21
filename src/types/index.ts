@@ -75,6 +75,7 @@ export interface Order {
   finalTotal: number;
   paymentMethod: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  cancelReason?: string;
   createdAt?: TimestampType;
   voucherCode?: string;
 }
@@ -108,7 +109,7 @@ export interface Post {
 
 export interface Review {
   id: string | number;
-  productId: string;
+  productId: string | number;
   userId?: string;
   userName?: string;
   userAvatar?: string;
